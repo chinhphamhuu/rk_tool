@@ -24,7 +24,9 @@ def _paths(tmp_path):
 
 def _create_required_tools(paths):
     (paths.tools_dir / "afptool-rs").mkdir(parents=True)
+    (paths.tools_dir / "afptool-rs" / "afptool-rs").write_text("tool", encoding="utf-8")
     (paths.tools_dir / "lptools").mkdir(parents=True)
+    (paths.tools_dir / "lptools" / "simg2img").write_text("tool", encoding="utf-8")
     (paths.tools_dir / "lptools" / "lpunpack").write_text("tool", encoding="utf-8")
     (paths.tools_dir / "lptools" / "lpmake").write_text("tool", encoding="utf-8")
     (paths.tools_dir / "lptools" / "lpdump").write_text("tool", encoding="utf-8")

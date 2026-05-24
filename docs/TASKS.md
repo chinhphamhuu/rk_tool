@@ -62,7 +62,8 @@ Scope:
 Acceptance:
 - Có hàm/class load bundled tool paths.
 - Trả về trạng thái `OK`/`MISSING` cho từng tool:
-  - `tools/afptool-rs/`
+  - `tools/afptool-rs/afptool-rs`
+  - `tools/lptools/simg2img`
   - `tools/lptools/lpunpack`
   - `tools/lptools/lpmake`
   - `tools/lptools/lpdump`
@@ -653,3 +654,75 @@ Reviewer notes:
 - PASS: No Setup tab and no separate Verify tab were added.
 - PASS: Does not use uncontrolled global state.
 - PASS: Tests pass: `compileall`, smoke test, full pytest, and offscreen GUI instantiate with 7 tabs.
+
+## Phase 4 - Real unpack/analyze workflow foundation
+
+### TASK-0401 - Implement RKFW/RKAF unpack workflow
+Status: REVIEW
+
+Scope:
+- Add `core/rkaf.py` workflow foundation for unpacking RKFW then RKAF through the provided runner.
+- Use bundled `tools/afptool-rs/afptool-rs` from `core/tool_config.py`.
+- Convert Windows paths to WSL paths and quote shell paths safely.
+- Do not repack ROM, apply diff, flash device, or call external commands outside `WslRunner`.
+
+Acceptance:
+- `unpack_rkfw_rkaf()` builds `afptool-rs unpack <update.img> <work/outer>`.
+- It finds `embedded-update.img` or update-like output in `work/outer`.
+- It builds `afptool-rs unpack <embedded-update.img> <work/update>`.
+- Missing `afptool-rs` raises a clear workflow error before running any command.
+- Missing embedded RKAF image raises a clear error and reports available files.
+- Tests use fake runner and fake filesystem output only.
+- `tests/test_rkaf.py` pass.
+
+Implementation notes:
+- Added `RkafWorkflowError` and `RkafUnpackResult`.
+- Commands are recorded in `commands_run` for GUI/logging later.
+- `core/tool_config.py` now checks the standard binary path `tools/afptool-rs/afptool-rs`.
+- No GUI, ROM repack, WSL direct call, subprocess direct call, or real tool invocation was added.
+
+### TASK-0402 - Implement super.img analyze workflow
+Status: REVIEW
+
+Scope:
+- Add `core/super_image.py` workflow foundation for sparse/raw detection and lpdump report generation.
+- Use `core/sparse_image.py` for sparse detection.
+- Use bundled `simg2img` only when sparse and bundled `lpdump` for report generation.
+- Parse generated `lpdump_original.txt` when present.
+
+Acceptance:
+- Sparse `super.img` builds `simg2img <super.img> <work/super/super.raw.img>`.
+- Raw `super.img` skips `simg2img` and uses the original image path for `lpdump`.
+- `lpdump <raw_super> > <work/reports/lpdump_original.txt>` command is built with quoted WSL paths.
+- Missing `super.img`, `simg2img`, or `lpdump` raises clear errors.
+- Tests use fake runner and generated text fixtures only.
+- `tests/test_super_image.py` pass.
+
+Implementation notes:
+- Added `SuperImageWorkflowError` and `SuperAnalyzeResult`.
+- `metadata_summary` is populated when the generated report can be parsed by `core/lpdump_parser.py`.
+- `core/tool_config.py` now checks `tools/lptools/simg2img`.
+- No GUI, lpunpack, lpmake, repack, direct WSL call, subprocess direct call, or real tool invocation was added.
+
+### TASK-0403 - Generate vbmeta/lpdump reports for Partition Explorer
+Status: REVIEW
+
+Scope:
+- Add `core/workflow.py` combined unpack/analyze foundation.
+- Generate `work/reports/vbmeta_info.txt` using `avbtool.py info_image` command through runner.
+- Generate `work/reports/lpdump_original.txt` through `core/super_image.py`.
+- Refresh Partition Explorer state from generated reports.
+
+Acceptance:
+- `generate_vbmeta_report()` builds `python3 <avbtool.py> info_image --image <vbmeta.img> > <reports/vbmeta_info.txt>`.
+- Missing `vbmeta.img` returns `None` without crashing.
+- `run_unpack_and_analyze_workflow()` calls RKFW/RKAF unpack, optional vbmeta analyze, optional super analyze, then `build_partition_explorer()`.
+- Project state is updated with detected images, dynamic partitions, and AVB summary; it is saved when `state_path` is provided.
+- Missing tool raises clear `WorkflowError`.
+- Tests use fake runner only and do not require WSL or bundled tools to exist.
+- `tests/test_workflow_unpack_analyze.py` pass.
+
+Implementation notes:
+- Added `WorkflowError` and `RomAnalyzeWorkflowResult`.
+- Workflow preserves warnings for missing `super.img`/`vbmeta.img` and parser warnings.
+- No GUI, repack final, apply diff, resize, flash, direct WSL call, subprocess direct call, or real tool invocation was added.

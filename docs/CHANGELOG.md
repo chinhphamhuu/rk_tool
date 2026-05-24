@@ -4,6 +4,8 @@
 
 ### Changed
 
+- `TASK-0401`, `TASK-0402`, `TASK-0403` implement xong va chuyen sang REVIEW; backend unpack/analyze workflow foundation build command qua runner interface, tests dung fake runner va chua repack/apply/flash.
+
 - UX bỏ tab Setup.
 - UX bỏ tab Verify riêng.
 - Sidebar còn 7 tab.
@@ -33,6 +35,12 @@
 - `TASK-0301`, `TASK-0302`, `TASK-0303` review PASS và chuyển sang DONE; ghi nhận non-blocker cần chặn Windows reserved project names, cải thiện lỗi quyền ghi/save JSON, và tạo report thật qua `WslRunner` ở task sau.
 
 ### Added
+
+- `core/rkaf.py` workflow foundation cho RKFW/RKAF unpack command qua runner.
+- `core/super_image.py` workflow foundation cho sparse/raw detect, `simg2img` command khi can va `lpdump_original.txt`.
+- `core/workflow.py` combined workflow tao `vbmeta_info.txt`, `lpdump_original.txt`, refresh Partition Explorer va update project state.
+- `tools/lptools/simg2img` detection trong `core/tool_config.py`; `afptool-rs` path chuan la `tools/afptool-rs/afptool-rs`.
+- `tests/test_rkaf.py`, `tests/test_super_image.py`, `tests/test_workflow_unpack_analyze.py`.
 
 - `docs/TECHNICAL_KNOWLEDGE_BASE.md`.
 - `docs/COMMANDS_REFERENCE.md`.

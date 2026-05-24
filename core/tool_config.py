@@ -54,7 +54,8 @@ class BundledToolConfig:
 
 
 REQUIRED_BUNDLED_TOOLS: tuple[BundledToolSpec, ...] = (
-    BundledToolSpec("afptool-rs", Path("afptool-rs"), "dir"),
+    BundledToolSpec("afptool-rs", Path("afptool-rs") / "afptool-rs", "file"),
+    BundledToolSpec("simg2img", Path("lptools") / "simg2img", "file"),
     BundledToolSpec("lpunpack", Path("lptools") / "lpunpack", "file"),
     BundledToolSpec("lpmake", Path("lptools") / "lpmake", "file"),
     BundledToolSpec("lpdump", Path("lptools") / "lpdump", "file"),
