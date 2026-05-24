@@ -1,0 +1,2 @@
+product_a/app|d|755|root|root|0
+product_a/app/DLTivi/DLTivi.apk|f|644|root|root|12345

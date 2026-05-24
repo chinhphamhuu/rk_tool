@@ -1,0 +1,18 @@
+{
+  "app": {
+    "language": "vi",
+    "theme": "light"
+  },
+  "workspace": {
+    "mode": "app_root",
+    "relative_path": "workspace"
+  },
+  "tools": {
+    "bundled": true,
+    "afptool_rs": "tools/afptool-rs/afptool-rs",
+    "lpunpack": "tools/lptools/lpunpack",
+    "lpmake": "tools/lptools/lpmake",
+    "lpdump": "tools/lptools/lpdump",
+    "avbtool": "tools/avbtool/avbtool.py"
+  }
+}
