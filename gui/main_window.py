@@ -26,6 +26,8 @@ class MainWindow(QMainWindow):
     def __init__(self, paths) -> None:
         super().__init__()
         self.paths = paths
+        self.current_project_state = None
+        self.current_project_state_path = None
         self.setWindowTitle("Rockchip Android ROM Repack GUI")
         self.resize(1450, 1020)
 
@@ -44,8 +46,15 @@ class MainWindow(QMainWindow):
         self.sidebar = Sidebar(self.TAB_LABELS)
         self.stack = QStackedWidget()
         self.stack.setObjectName("ContentRoot")
-        self.stack.addWidget(ProjectTab(paths))
-        self.stack.addWidget(UnpackTab())
+
+        self.project_tab = ProjectTab(paths)
+        self.unpack_tab = UnpackTab()
+        self.project_tab.project_created.connect(self._set_project_state)
+        self.project_tab.project_loaded.connect(self._set_project_state)
+        self.unpack_tab.project_state_updated.connect(self._set_project_state)
+
+        self.stack.addWidget(self.project_tab)
+        self.stack.addWidget(self.unpack_tab)
         self.stack.addWidget(AnalyzeTab())
         self.stack.addWidget(EditRomTab())
         self.stack.addWidget(ApplyChangesTab())
@@ -66,11 +75,17 @@ class MainWindow(QMainWindow):
         layout = QHBoxLayout(bar)
         layout.setContentsMargins(24, 8, 24, 8)
         layout.addStretch(1)
-        tools = QLabel("●  Công cụ: 5/5 sẵn sàng")
-        tools.setStyleSheet("color:#079455; font-weight:700;")
-        workspace = QLabel("●  Workspace: Chưa chọn")
-        workspace.setStyleSheet("color:#667085; font-weight:600;")
-        layout.addWidget(tools)
+        self.tools_label = QLabel("●  Công cụ: bundled/read-only")
+        self.tools_label.setStyleSheet("color:#079455; font-weight:700;")
+        self.workspace_label = QLabel("●  Project: Chưa tạo")
+        self.workspace_label.setStyleSheet("color:#667085; font-weight:600;")
+        layout.addWidget(self.tools_label)
         layout.addSpacing(28)
-        layout.addWidget(workspace)
+        layout.addWidget(self.workspace_label)
         return bar
+
+    def _set_project_state(self, state, state_path) -> None:
+        self.current_project_state = state
+        self.current_project_state_path = state_path
+        self.unpack_tab.set_project_state(state, state_path)
+        self.workspace_label.setText(f"●  Project: {state.project_name}")

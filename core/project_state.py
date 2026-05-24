@@ -66,6 +66,7 @@ class ProjectState:
     work_dir: str
     output_dir: str
     reports_dir: str
+    selected_apk_path: str | None = None
     detected_images: list[ProjectDetectedImage] = field(default_factory=list)
     dynamic_partitions: list[ProjectDynamicPartition] = field(default_factory=list)
     avb_summary: ProjectAvbSummary | None = None
@@ -85,6 +86,7 @@ def create_project_state(
     work_dir: str | Path | None = None,
     output_dir: str | Path | None = None,
     reports_dir: str | Path | None = None,
+    selected_apk_path: str | Path | None = None,
 ) -> ProjectState:
     base_dir = Path(project_dir)
     return ProjectState(
@@ -96,6 +98,7 @@ def create_project_state(
         work_dir=str(Path(work_dir) if work_dir is not None else base_dir / "work"),
         output_dir=str(Path(output_dir) if output_dir is not None else base_dir / "output"),
         reports_dir=str(Path(reports_dir) if reports_dir is not None else base_dir / "reports"),
+        selected_apk_path=str(selected_apk_path) if selected_apk_path else None,
     )
 
 
@@ -210,6 +213,7 @@ def _state_from_dict(data: dict[str, Any]) -> ProjectState:
         work_dir=data["work_dir"],
         output_dir=data["output_dir"],
         reports_dir=data["reports_dir"],
+        selected_apk_path=data.get("selected_apk_path"),
         detected_images=[
             ProjectDetectedImage(**image) for image in data.get("detected_images", [])
         ],

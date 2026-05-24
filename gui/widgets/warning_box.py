@@ -36,11 +36,19 @@ class WarningBox(QFrame):
 
         text_layout = QVBoxLayout()
         text_layout.setContentsMargins(0, 0, 0, 0)
-        title_label = QLabel(title)
-        title_label.setObjectName("SectionTitle")
-        message_label = QLabel(message)
-        message_label.setObjectName("MutedText")
-        message_label.setWordWrap(True)
-        text_layout.addWidget(title_label)
-        text_layout.addWidget(message_label)
+        self.title_label = QLabel(title)
+        self.title_label.setObjectName("SectionTitle")
+        self.message_label = QLabel(message)
+        self.message_label.setObjectName("MutedText")
+        self.message_label.setWordWrap(True)
+        text_layout.addWidget(self.title_label)
+        text_layout.addWidget(self.message_label)
         layout.addLayout(text_layout, 1)
+
+    def setText(self, text: str) -> None:
+        if "<br>" in text:
+            title, message = text.split("<br>", 1)
+            self.title_label.setText(title.replace("<b>", "").replace("</b>", ""))
+            self.message_label.setText(message)
+            return
+        self.message_label.setText(text)

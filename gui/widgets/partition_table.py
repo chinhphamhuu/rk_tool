@@ -2,46 +2,61 @@ from __future__ import annotations
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QTableWidget, QTableWidgetItem, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QPushButton, QTableWidget, QTableWidgetItem, QWidget
 
 from gui.widgets.status_badge import StatusBadge
 
 
+DynamicPartitionRow = tuple[str, str, str, str, str, str, tuple[str, ...]]
+
+
 class DynamicPartitionTable(QTableWidget):
-    ROWS = [
-        ("system_a.img", "ext4", "1.40 GB", "Sẵn sàng"),
-        ("product_a.img", "ext4", "628 MB", "Sẵn sàng"),
-        ("vendor_a.img", "ext4", "180 MB", "Sẵn sàng"),
-        ("odm_a.img", "ext4", "0.6 MB", "Sẵn sàng"),
-        ("system_ext_a.img", "ext4", "132 MB", "Sẵn sàng"),
+    DEFAULT_ROWS: list[DynamicPartitionRow] = [
+        ("system_a", "mock_group", "1.40 GB", "yes", "editable/system_a", "warning", ("View", "Extract tree")),
+        ("product_a", "mock_group", "628 MB", "yes", "editable/product_a", "safe_to_edit_limited", ("View", "Extract tree")),
+        ("vendor_a", "mock_group", "180 MB", "yes", "editable/vendor_a", "danger", ("View", "Extract tree")),
+        ("odm_a", "mock_group", "0.6 MB", "yes", "editable/odm_a", "danger", ("View", "Extract tree")),
+        ("system_ext_a", "mock_group", "132 MB", "yes", "editable/system_ext_a", "warning", ("View", "Extract tree")),
     ]
 
-    def __init__(self) -> None:
-        super().__init__(len(self.ROWS), 5)
-        self.setHorizontalHeaderLabels(("Tên partition", "Loại", "Kích thước", "Trạng thái", "Hành động"))
+    def __init__(self, rows: list[DynamicPartitionRow] | None = None) -> None:
+        super().__init__(0, 7)
+        self.setHorizontalHeaderLabels(
+            ("Tên partition", "Group", "Kích thước", "Readonly", "Editable", "Risk", "Hành động")
+        )
         self.verticalHeader().hide()
         self.setShowGrid(False)
         self.setMinimumHeight(300)
         self.horizontalHeader().setStretchLastSection(True)
-        for row, (name, kind, size, status) in enumerate(self.ROWS):
+        self.set_rows(rows if rows is not None else self.DEFAULT_ROWS)
+
+    def set_rows(self, rows: list[DynamicPartitionRow]) -> None:
+        self.setRowCount(len(rows))
+        for row, (name, group, size, readonly, editable, risk, actions) in enumerate(rows):
             self._set_item(row, 0, f"📁  {name}")
-            self._set_item(row, 1, kind)
+            self._set_item(row, 1, group)
             self._set_item(row, 2, size)
-            self.setCellWidget(row, 3, StatusBadge(f"●  {status}", "ok"))
-            self.setCellWidget(row, 4, self._actions())
+            self._set_item(row, 3, readonly)
+            self._set_item(row, 4, editable)
+            self.setCellWidget(row, 5, StatusBadge(f"●  {risk}", _badge_variant(risk)))
+            self.setCellWidget(row, 6, self._actions(actions))
+        self.resizeColumnsToContents()
 
     def _set_item(self, row: int, column: int, text: str) -> None:
         item = QTableWidgetItem(text)
         item.setFlags(item.flags() & ~Qt.ItemIsEditable)
         self.setItem(row, column, item)
 
-    def _actions(self) -> QWidget:
+    def _actions(self, labels: tuple[str, ...]) -> QWidget:
         widget = QWidget()
         layout = QHBoxLayout(widget)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(6)
-        layout.addWidget(QPushButton("Analyze"))
-        layout.addWidget(QPushButton("📁 Extract tree"))
+        for label in labels:
+            button = QPushButton(label)
+            button.setEnabled(False)
+            button.setToolTip("Chức năng chạy tool thật sẽ làm ở task sau.")
+            layout.addWidget(button)
         return widget
 
 
@@ -93,3 +108,14 @@ class SourcePartitionTable(QTableWidget):
         item = QTableWidgetItem(text)
         item.setFlags(item.flags() & ~Qt.ItemIsEditable)
         self.setItem(row, column, item)
+
+
+def _badge_variant(value: str) -> str:
+    normalized = value.lower()
+    if normalized in {"safe", "safe_to_edit_limited", "low", "ok"}:
+        return "ok"
+    if normalized in {"danger", "error"}:
+        return "error"
+    if normalized == "info":
+        return "info"
+    return "warning"

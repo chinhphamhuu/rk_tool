@@ -29,6 +29,7 @@
 - `TASK-0205`, `TASK-0206`, `TASK-0207` review PASS và chuyển sang DONE; ghi nhận non-blocker cần bổ sung fixture khi gặp `lpdump` thực tế khác, verify command với binary `lpmake` thật, và lấy `size_override` từ resize planner/ext4 image.
 - `TASK-0208`, `TASK-0209` implement xong và chuyển sang REVIEW; Partition Explorer state foundation chỉ gom filesystem/report state, chưa chạy tool thật.
 - `TASK-0208`, `TASK-0209` review PASS và chuyển sang DONE; ghi nhận non-blocker cần chuẩn hóa `image_dir`, truyền source image root rõ hơn và chạy `avbtool`/`lpdump` thật qua `WslRunner` ở task sau.
+- `TASK-0301`, `TASK-0302`, `TASK-0303` implement xong và chuyển sang REVIEW; GUI Project/Unpack bắt đầu nối với core state nhưng chưa chạy unpack/analyze tool thật.
 
 ### Added
 
@@ -64,3 +65,7 @@
 - `core/partition_explorer.py` với `PartitionExplorerResult`, image nodes, dynamic partition nodes và AVB summary.
 - `core/project_state.py` lưu project/Partition Explorer state ra JSON UTF-8, có schema version và partition extracted/modified flags.
 - `tests/test_partition_explorer.py` và `tests/test_project_state.py`.
+- Project tab state creation flow: tạo project dirs, lưu `project_state.json`, hiển thị bundled tools OK/MISSING read-only.
+- Unpack tab Partition Explorer refresh flow: đọc `Image/` và optional report text, cập nhật detected images/dynamic partitions/AVB summary vào state.
+- GUI project state load/save foundation qua signal từ Project tab sang MainWindow và Unpack tab.
+- `tests/test_gui_project_state_flow.py` và `tests/test_gui_unpack_partition_flow.py`.

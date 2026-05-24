@@ -540,3 +540,78 @@ Reviewer notes:
 - PASS: Tests pass: `tests/test_project_state.py`, `compileall`, smoke test, and full pytest.
 - Non-blocker: Future project creation should standardize the real `image_dir` as `project_dir/work/update/Image` or pass it explicitly.
 - Non-blocker: Real workflow should generate AVB/lpdump reports through `WslRunner` in a later task.
+
+## Phase 3 — GUI core state wiring
+
+### TASK-0301 — Wire Project tab to ProjectState
+Status: REVIEW
+
+Scope:
+- Connect `gui/project_tab.py` to `core/project_state.py`, `core/app_paths.py`, and `core/tool_config.py`.
+- Project tab creates project folder structure and saves `project_state.json`.
+- Do not copy large ROM files.
+- Do not allow manual workspace or tool path selection.
+- Do not call WSL, subprocess, or real ROM tools.
+
+Acceptance:
+- User can select original `update.img`, enter project name, optionally select APK path, and create a project.
+- Project dir is created under `APP_ROOT/workspace/projects/<project_name>`.
+- Minimal subdirs are created: `work/`, `work/update/`, `work/update/Image/`, `work/reports/`, `work/parts/`, `work/modified/`, `editable/`, `output/`, `logs/`.
+- `project_state.json` stores project name, ROM path, project dirs, selected APK path, timestamps and schema version.
+- Existing project names are rejected clearly.
+- Tools are displayed read-only from `APP_ROOT/tools` with OK/MISSING status.
+- `tests/test_gui_project_state_flow.py` pass.
+
+Implementation notes:
+- Added `create_project_from_inputs()` and `ProjectCreationError` in `gui/project_tab.py` for testable project creation flow.
+- `ProjectTab` emits `project_created(state, state_path)` and can load an existing `project_state.json`.
+- Added `selected_apk_path` to `ProjectState` without breaking existing JSON load.
+- No WSL, subprocess, GUI workspace picker, tool path picker, ROM copy, or real tool calls were added.
+
+### TASK-0302 — Wire Unpack tab to PartitionExplorer
+Status: REVIEW
+
+Scope:
+- Connect `gui/unpack_tab.py` to `core/partition_explorer.py` and `core/project_state.py`.
+- Refresh detected images/dynamic partitions from existing `Image/` and report text files.
+- Keep action buttons disabled/log-only for real tool execution.
+- Do not call WSL, subprocess, or real ROM tools.
+
+Acceptance:
+- Unpack tab reads current project state from MainWindow.
+- Without a project, Unpack tab shows a clear warning and does not crash.
+- Refresh calls `build_partition_explorer()` with `image_dir`, optional `work/reports/vbmeta_info.txt`, optional `work/reports/lpdump_original.txt`, and `editable_dir`.
+- Detected images table displays name, type, size, risk, supported actions, status and notes.
+- Dynamic partitions table displays name, group, size, readonly, editable dir, risk and supported actions.
+- AVB summary displays algorithm, flags, risk, affected partitions and warnings.
+- Refresh updates and saves `project_state.json`.
+- Empty `Image/` folder is handled with warning.
+- `tests/test_gui_unpack_partition_flow.py` pass.
+
+Implementation notes:
+- Added `refresh_partition_explorer_state()` and `UnpackFlowError` in `gui/unpack_tab.py`.
+- `UnpackTab` emits `project_state_updated(state, state_path)` after refresh.
+- Detected image and dynamic partition tables can now be populated from core state.
+- No WSL, subprocess, unpack/repack, or real tool calls were added.
+
+### TASK-0303 — Add GUI state loading/saving flow
+Status: REVIEW
+
+Scope:
+- Add simple GUI state holder flow between Project tab, MainWindow, and Unpack tab.
+- Support manual load of `project_state.json`.
+- Keep 7-tab sidebar unchanged.
+- Do not introduce global state.
+
+Acceptance:
+- `MainWindow` holds `current_project_state` and `current_project_state_path`.
+- Project creation/loading updates MainWindow state and passes it to Unpack tab.
+- Unpack refresh persists state and informs MainWindow.
+- Sidebar remains exactly 7 tabs in the locked order.
+- No Setup tab and no separate Verify tab are added.
+- `python -m compileall .`, smoke test and full pytest pass.
+
+Implementation notes:
+- `MainWindow` wires Project tab signals to Unpack tab via `_set_project_state()`.
+- Status bar shows current project name after create/load.
+- Existing mock UI for other tabs is unchanged.

@@ -12,7 +12,7 @@
 - Tab Unpack chuyển thành Partition Explorer.
 - Tab Repack đổi thành `Repack & Verify`, tự verify offline sau khi repack.
 
-`TASK-0001` đã review PASS và DONE. `TASK-0101` đã review PASS và DONE. `TASK-0101B` đã review PASS và DONE. `TASK-0102` đã review PASS và DONE. `TASK-0103` đã review PASS và DONE. `TASK-0104` đã review PASS và DONE. `TASK-0200` đã review PASS và DONE. `TASK-0203` đã review PASS và DONE. `TASK-0204` đã review PASS và DONE. `TASK-0205`, `TASK-0206` và `TASK-0207` đã review PASS và DONE. `TASK-0208` và `TASK-0209` đã review PASS và DONE.
+`TASK-0001` đã review PASS và DONE. `TASK-0101` đã review PASS và DONE. `TASK-0101B` đã review PASS và DONE. `TASK-0102` đã review PASS và DONE. `TASK-0103` đã review PASS và DONE. `TASK-0104` đã review PASS và DONE. `TASK-0200` đã review PASS và DONE. `TASK-0203` đã review PASS và DONE. `TASK-0204` đã review PASS và DONE. `TASK-0205`, `TASK-0206` và `TASK-0207` đã review PASS và DONE. `TASK-0208` và `TASK-0209` đã review PASS và DONE. `TASK-0301`, `TASK-0302` và `TASK-0303` đã implement xong và đang ở REVIEW.
 
 ## Review mới nhất
 
@@ -146,6 +146,20 @@
 
 ## Implementation mới nhất
 
+`TASK-0301/0302/0303 — GUI Project + Unpack state wiring`:
+
+- Project tab đã tạo project thật dưới `APP_ROOT/workspace/projects/<project_name>` và lưu `project_state.json`.
+- Project tab tạo các folder con MVP: `work/`, `work/update/`, `work/update/Image/`, `work/reports/`, `work/parts/`, `work/modified/`, `editable/`, `output/`, `logs/`.
+- Project state lưu `selected_apk_path` nếu người dùng chọn APK tùy chọn; ROM gốc chỉ lưu path, chưa copy file lớn.
+- Bundled tools hiển thị read-only từ `APP_ROOT/tools` với trạng thái OK/MISSING.
+- MainWindow giữ `current_project_state` và truyền state từ Project tab sang Unpack tab qua signal.
+- Unpack tab refresh Partition Explorer từ `Image/`, `work/reports/vbmeta_info.txt` và `work/reports/lpdump_original.txt` nếu các report đã tồn tại.
+- Unpack tab cập nhật detected images, dynamic partitions, AVB summary vào `project_state.json`.
+- Nếu chưa có project hoặc `Image/` rỗng, Unpack tab hiển thị warning rõ và không crash.
+- Action chạy tool thật vẫn disabled/log-only; chưa gọi WSL, subprocess, `afptool-rs`, `simg2img`, `lpdump`, `lpunpack`, `avbtool`, `lpmake` hoặc ROM tool thật.
+- Sidebar vẫn đúng 7 tab; không thêm Setup tab hoặc Verify tab riêng.
+- Tests pass: `tests/test_gui_project_state_flow.py` và `tests/test_gui_unpack_partition_flow.py`.
+
 `TASK-0208/0209 — Partition Explorer state foundation`:
 
 - `core/partition_explorer.py` gom detected images từ `Image/`, sparse/raw status cho `super.img`, AVB summary từ report text nếu có, và dynamic partitions từ lpdump report text nếu có.
@@ -264,5 +278,6 @@
 
 ## Task tiếp theo đề xuất
 
-1. Implement backend wiring cho Project/Unpack sau khi core foundation tiếp tục ổn định.
-2. Review task tiếp theo theo `docs/REVIEW_CHECKLIST.md` khi có implementation mới.
+1. Review `TASK-0301/0302/0303 — GUI Project + Unpack state wiring` theo checklist.
+2. Nếu review PASS, chuyển `TASK-0301`, `TASK-0302`, `TASK-0303` sang DONE.
+3. Task sau mới chạy unpack/analyze tool thật qua `WslRunner`.
