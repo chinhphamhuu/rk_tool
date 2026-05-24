@@ -12,9 +12,20 @@
 - Tab Unpack chuyển thành Partition Explorer.
 - Tab Repack đổi thành `Repack & Verify`, tự verify offline sau khi repack.
 
-`TASK-0001` đã review PASS và DONE. `TASK-0101` đã review PASS và DONE. `TASK-0101B` đã review PASS và DONE. `TASK-0102` đã review PASS và DONE. `TASK-0103` đã review PASS và DONE. `TASK-0104` đã review PASS và DONE. `TASK-0200` đã review PASS và DONE. `TASK-0203 — Image detector core` đã implement xong và đang ở REVIEW.
+`TASK-0001` đã review PASS và DONE. `TASK-0101` đã review PASS và DONE. `TASK-0101B` đã review PASS và DONE. `TASK-0102` đã review PASS và DONE. `TASK-0103` đã review PASS và DONE. `TASK-0104` đã review PASS và DONE. `TASK-0200` đã review PASS và DONE. `TASK-0203` đã review PASS và DONE.
 
 ## Review mới nhất
+
+`TASK-0203 — Image detector core`:
+
+- PASS: `core/image_detector.py` chỉ scan filesystem bằng Python thuần.
+- PASS: Không gọi WSL, subprocess, ROM tool thật và không sửa GUI.
+- PASS: Detect đúng `super.img`, `vbmeta.img`, `boot.img`, `recovery.img`, `dtbo.img`, `uboot.img`, `trust.img`, `misc.img`, `parameter.txt` và unknown `.img`.
+- PASS: `uboot.img`/`trust.img` là `bootloader_danger`, risk `danger`, action `info_only`.
+- PASS: Empty `Image/` folder trả list rỗng; missing/non-directory path raise `ImageDetectorError` rõ ràng.
+- PASS: Metadata trả về đủ `name`, `path`, `size_bytes`, `type`, `risk_level`, `supported_actions`.
+- PASS: Tests pass: `tests/test_image_detector.py`, `compileall`, smoke test và full pytest.
+- Non-blocker: `super.img` risk `safe` chấp nhận được cho analyze/unpack; khi làm rebuild super/lpmake thật cần thêm cảnh báo riêng vì sửa `super.img` vẫn có rủi ro.
 
 `TASK-0104 — Implement core/rkfw.py RKFW header and MD5 tail utilities`:
 
@@ -170,6 +181,5 @@
 
 ## Task tiếp theo đề xuất
 
-1. Review `TASK-0203 — Image detector core`.
-2. Nếu review PASS, chuyển `TASK-0203` sang DONE.
-3. Implement backend wiring cho Project/Unpack sau khi core foundation tiếp tục ổn định.
+1. Implement backend wiring cho Project/Unpack sau khi core foundation tiếp tục ổn định.
+2. Review task tiếp theo theo `docs/REVIEW_CHECKLIST.md` khi có implementation mới.

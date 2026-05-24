@@ -230,7 +230,7 @@ Status: TODO
 Status: TODO
 
 ### TASK-0203 — Image detector core
-Status: REVIEW
+Status: DONE
 
 Scope:
 - Implement `core/image_detector.py`.
@@ -261,3 +261,17 @@ Implementation notes:
 - Non-image unrelated files are ignored.
 - Tests use `tmp_path` and fake files only.
 - Tests pass: `tests/test_image_detector.py`, `compileall`, smoke test and full pytest.
+
+Reviewer notes:
+- PASS: `core/image_detector.py` chỉ scan filesystem bằng Python thuần.
+- PASS: Không gọi WSL, subprocess, ROM tool thật và không sửa GUI.
+- PASS: Detect `super.img` là `dynamic_super`, actions `analyze`/`unpack`.
+- PASS: Detect `vbmeta.img` là `avb_vbmeta`, action `analyze_avb`.
+- PASS: Detect `boot.img`/`recovery.img` là analyze-only.
+- PASS: Detect `dtbo.img` là info-only.
+- PASS: Detect `uboot.img`/`trust.img` là `bootloader_danger`, risk `danger`, `info_only`.
+- PASS: Detect `misc.img`, `parameter.txt` và unknown `.img`.
+- PASS: Empty `Image/` folder trả list rỗng; missing/non-directory path raise `ImageDetectorError` rõ ràng.
+- PASS: Metadata trả về đủ `name`, `path`, `size_bytes`, `type`, `risk_level`, `supported_actions`.
+- PASS: Tests pass: `tests/test_image_detector.py`, `compileall`, smoke test và full pytest.
+- Non-blocker: `super.img` risk `safe` chấp nhận được cho analyze/unpack; khi làm rebuild super/lpmake thật cần thêm cảnh báo riêng vì sửa `super.img` vẫn có rủi ro.
