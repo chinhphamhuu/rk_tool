@@ -330,7 +330,7 @@ Reviewer notes:
 - Non-blocker: Không được kết luận chắc chắn AVB đã tắt, chỉ dùng wording `likely disabled` / `requires attention`.
 
 ### TASK-0205 — Implement `core/sparse_image.py`
-Status: REVIEW
+Status: DONE
 
 Scope:
 - Detect Android sparse image format with Python file I/O only.
@@ -353,8 +353,15 @@ Implementation notes:
 - No WSL, subprocess, `simg2img`, GUI or ROM tool calls were added.
 - Tests pass: `tests/test_sparse_image.py`, `compileall`, smoke test and full pytest.
 
+Reviewer notes:
+- PASS: `sparse_image.py` detects Android sparse magic `0xED26FF3A` / bytes `3A FF 26 ED`.
+- PASS: Only reads the 4-byte header, not the full image into memory.
+- PASS: Missing/tiny files raise `SparseImageError` clearly.
+- PASS: Does not call WSL, subprocess, `simg2img`, or any real ROM tool.
+- PASS: Tests pass: `tests/test_sparse_image.py`, `compileall`, smoke test, and full pytest.
+
 ### TASK-0206 — Implement `core/lpdump_parser.py`
-Status: REVIEW
+Status: DONE
 
 Scope:
 - Parse text output from `lpdump` reports.
@@ -383,8 +390,21 @@ Implementation notes:
 - No WSL, subprocess, `lpdump`, GUI or ROM tool calls were added.
 - Tests pass: `tests/test_lpdump_parser.py`, `compileall`, smoke test and full pytest.
 
+Reviewer notes:
+- PASS: Provides `SuperMetadata`, `DynamicGroup`, `DynamicPartition`, and `LpDumpParseError`.
+- PASS: `parse_lpdump_text()` and `load_lpdump_report()` work.
+- PASS: Parses metadata size/slots, block size, device size, and alignment.
+- PASS: Parses group name, group maximum size, and flags.
+- PASS: Parses partition name, group, size, readonly/attributes, and extent count.
+- PASS: Supports A/B and non-A/B fixtures.
+- PASS: Unknown partitions such as `vendor_boot` still parse; no RK3318/product_a/system_a hard-code.
+- PASS: Empty or missing required fields raise `LpDumpParseError`.
+- PASS: Does not call WSL, subprocess, `lpdump`, or any real ROM tool.
+- PASS: Tests pass: `tests/test_lpdump_parser.py`, `compileall`, smoke test, and full pytest.
+- Non-blocker: Real `lpdump` output may vary; add fixtures later if real ROM testing exposes another format.
+
 ### TASK-0207 — Implement `core/lpmake_builder.py`
-Status: REVIEW
+Status: DONE
 
 Scope:
 - Build preview command for `lpmake` from parsed `SuperMetadata`.
@@ -411,3 +431,81 @@ Implementation notes:
 - Uses parsed group and partition metadata from `SuperMetadata`.
 - No WSL, subprocess, `lpmake`, GUI or ROM tool calls were added.
 - Tests pass: `tests/test_lpmake_builder.py`, `compileall`, smoke test and full pytest.
+
+Reviewer notes:
+- PASS: Provides `LpMakeImageSource`, `LpMakeCommand`, and `build_lpmake_command()`.
+- PASS: Command preview is built from `SuperMetadata`, without hard-coded size/name/group values.
+- PASS: Includes metadata-size, metadata-slots, device-size, block-size, alignment, group, partition, image, sparse flag, and output path.
+- PASS: Uses `parts/*.img` or `modified/*.img` according to `image_sources`.
+- PASS: Missing image source raises `LpMakeBuildError`.
+- PASS: Size override and group size validation work.
+- PASS: Paths with spaces are quoted in `command_string`; Unicode paths are preserved.
+- PASS: `sparse=True` includes `--sparse`; `sparse=False` omits `--sparse`.
+- PASS: Does not call WSL, subprocess, `lpmake`, or any real ROM tool.
+- PASS: Tests pass: `tests/test_lpmake_builder.py`, `compileall`, smoke test, and full pytest.
+- Non-blocker: Real execution must verify the preview against the bundled `lpmake` binary.
+- Non-blocker: Future `size_override` values must come from `resize_planner`/`ext4_image`, not manual input.
+
+### TASK-0208 — Implement `core/partition_explorer.py`
+Status: REVIEW
+
+Scope:
+- Build Partition Explorer core state for the Unpack tab.
+- Combine detected images, sparse/raw status, optional AVB report summary and optional dynamic partition metadata.
+- Reuse `core/image_detector.py`, `core/sparse_image.py`, `core/avb.py` and `core/lpdump_parser.py`.
+- Do not call WSL, subprocess or real ROM tools.
+- Do not modify GUI.
+
+Acceptance:
+- `build_partition_explorer(image_dir, vbmeta_report_path=None, lpdump_report_path=None, editable_root=None)` returns detected images, image groups, dynamic partitions, AVB summary, warnings and errors.
+- `collect_detected_images(image_dir)` uses `image_detector` and returns `PartitionImageNode` entries.
+- `load_optional_avb_summary(vbmeta_report_path)` parses text reports through `core/avb.py`.
+- `load_optional_dynamic_partitions(lpdump_report_path, editable_root=None)` parses lpdump text reports through `core/lpdump_parser.py`.
+- `super.img` is marked sparse/raw using `core/sparse_image.py` only; no `simg2img` execution.
+- Empty `Image/` folder returns a valid result with warning.
+- Missing `image_dir` raises `PartitionExplorerError`.
+- AVB Hash/Hashtree descriptors add bootloop/AVB warning.
+- Dynamic partitions preserve A/B, non-A/B and unknown partition names.
+- Partition risk does not claim absolute safety.
+- `tests/test_partition_explorer.py` pass.
+- `python -m compileall .` pass.
+- `python app.py --smoke-test` pass.
+- `python -m pytest` pass.
+
+Implementation notes:
+- Added `PartitionExplorerResult`, `PartitionImageNode`, `DynamicPartitionNode`, `AvbSummary` and `PartitionExplorerError`.
+- `build_partition_explorer()` combines data from existing core parsers and reports parse errors in the result.
+- Dynamic partition actions are limited to `extract_tree` and `view_info`.
+- No WSL, subprocess, GUI or ROM tool calls were added.
+- Tests pass: `tests/test_partition_explorer.py`.
+
+### TASK-0209 — Improve `core/project_state.py` for detected images and partition explorer state
+Status: REVIEW
+
+Scope:
+- Persist project and Partition Explorer state to JSON.
+- Preserve ROM path, project name, project/work/image/editable/output/report dirs, detected images, dynamic partitions, AVB summary and partition flags.
+- Do not hard-code workspace absolute paths.
+- Do not call WSL, subprocess or real ROM tools.
+- Do not modify GUI.
+
+Acceptance:
+- `create_project_state(...)` creates schema-versioned state.
+- `save_project_state(state, path)` writes UTF-8 JSON without losing Unicode.
+- `load_project_state(path)` loads state and raises `ProjectStateError` for missing/invalid files.
+- `update_partition_explorer_state(state, explorer_result)` stores detected images, dynamic partitions and AVB summary.
+- `mark_partition_extracted(state, partition_name, editable_dir)` records extracted partition state.
+- `mark_partition_modified(state, partition_name)` records modified partition state.
+- `get_partition_source_image(state, partition_name)` uses `modified/*.img` for modified partitions and `parts/*.img` otherwise.
+- `tests/test_project_state.py` pass.
+- `python -m compileall .` pass.
+- `python app.py --smoke-test` pass.
+- `python -m pytest` pass.
+
+Implementation notes:
+- Added `ProjectState`, `ProjectDetectedImage`, `ProjectDynamicPartition`, `ProjectAvbSummary` and `ProjectStateError`.
+- JSON is written with `ensure_ascii=False` and UTF-8 encoding.
+- Paths are persisted as strings and derived from the project dir passed by callers.
+- State keeps `schema_version`, `created_at` and `updated_at`.
+- No WSL, subprocess, GUI or ROM tool calls were added.
+- Tests pass: `tests/test_project_state.py`.

@@ -12,9 +12,21 @@
 - Tab Unpack chuyển thành Partition Explorer.
 - Tab Repack đổi thành `Repack & Verify`, tự verify offline sau khi repack.
 
-`TASK-0001` đã review PASS và DONE. `TASK-0101` đã review PASS và DONE. `TASK-0101B` đã review PASS và DONE. `TASK-0102` đã review PASS và DONE. `TASK-0103` đã review PASS và DONE. `TASK-0104` đã review PASS và DONE. `TASK-0200` đã review PASS và DONE. `TASK-0203` đã review PASS và DONE. `TASK-0204` đã review PASS và DONE. `TASK-0205`, `TASK-0206` và `TASK-0207` đã implement xong và đang ở REVIEW.
+`TASK-0001` đã review PASS và DONE. `TASK-0101` đã review PASS và DONE. `TASK-0101B` đã review PASS và DONE. `TASK-0102` đã review PASS và DONE. `TASK-0103` đã review PASS và DONE. `TASK-0104` đã review PASS và DONE. `TASK-0200` đã review PASS và DONE. `TASK-0203` đã review PASS và DONE. `TASK-0204` đã review PASS và DONE. `TASK-0205`, `TASK-0206` và `TASK-0207` đã review PASS và DONE. `TASK-0208` và `TASK-0209` đã implement xong và đang ở REVIEW.
 
 ## Review mới nhất
+
+`TASK-0205/0206/0207 — super.img metadata foundation`:
+
+- PASS: `sparse_image.py` detect sparse magic đúng, chỉ đọc 4 byte header và lỗi missing/tiny rõ ràng.
+- PASS: `lpdump_parser.py` parse metadata, groups, partitions cho A/B và non-A/B fixtures.
+- PASS: Partition lạ như `vendor_boot` vẫn parse được; không hard-code RK3318/product_a/system_a.
+- PASS: `lpmake_builder.py` build preview từ `SuperMetadata`, có group-size validation, missing source error, size override, sparse flag và quote path.
+- PASS: Không gọi WSL, subprocess, `simg2img`, `lpdump`, `lpunpack`, `lpmake` hoặc ROM tool thật.
+- PASS: Tests pass: `test_sparse_image.py`, `test_lpdump_parser.py`, `test_lpmake_builder.py`, `compileall`, smoke test và full pytest.
+- Non-blocker: `lpdump` thực tế có thể khác fixture; khi test ROM thật nếu parse fail thì bổ sung fixture.
+- Non-blocker: `lpmake` command khi chạy thật cần verify với binary `lpmake` thực tế.
+- Non-blocker: `size_override` sau này phải lấy từ `resize_planner`/`ext4_image`, không nhập tay.
 
 `TASK-0204 — Implement core/avb.py AVB/vbmeta info parser`:
 
@@ -115,6 +127,18 @@
 - Tests pass: `compileall`, smoke test, pytest và GUI instantiate offscreen.
 
 ## Implementation mới nhất
+
+`TASK-0208/0209 — Partition Explorer state foundation`:
+
+- `core/partition_explorer.py` gom detected images từ `Image/`, sparse/raw status cho `super.img`, AVB summary từ report text nếu có, và dynamic partitions từ lpdump report text nếu có.
+- `PartitionExplorerResult` có image groups cho `super.img`, `vbmeta.img`, boot/recovery, danger images, dynamic partition list, warnings và errors.
+- AVB Hash/Hashtree descriptor được đưa vào warning để GUI Unpack/Analyze sau này hiển thị cảnh báo đỏ.
+- Dynamic partitions giữ nguyên tên A/B, non-A/B hoặc partition lạ; không hard-code RK3318/product_a/system_a.
+- `core/project_state.py` lưu project state JSON UTF-8 gồm ROM gốc, project dirs, detected images, dynamic partitions, AVB summary, extracted/modified partition flags và schema version.
+- `get_partition_source_image()` chọn `modified/*.img` nếu partition đã modified, còn lại dùng `parts/*.img`.
+- Chưa gọi WSL, subprocess, `afptool-rs`, `simg2img`, `lpdump`, `lpunpack`, `avbtool`, `lpmake` hoặc ROM tool thật.
+- Dữ liệu này là nền tảng để GUI Unpack tab chuyển từ mock sang state core ở task sau.
+- Tests pass: `tests/test_partition_explorer.py` và `tests/test_project_state.py`.
 
 `TASK-0205/0206/0207 — super.img metadata foundation`:
 
@@ -222,6 +246,6 @@
 
 ## Task tiếp theo đề xuất
 
-1. Review `TASK-0205/0206/0207 — super.img metadata foundation`.
-2. Nếu review PASS, chuyển `TASK-0205`, `TASK-0206`, `TASK-0207` sang DONE.
+1. Review `TASK-0208/0209 — Partition Explorer state foundation` theo checklist.
+2. Nếu review PASS, chuyển `TASK-0208` và `TASK-0209` sang DONE.
 3. Implement backend wiring cho Project/Unpack sau khi core foundation tiếp tục ổn định.

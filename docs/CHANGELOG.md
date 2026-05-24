@@ -26,6 +26,8 @@
 - `TASK-0204` implement xong và chuyển sang REVIEW; AVB/vbmeta parser chỉ parse text report mẫu, không gọi WSL/subprocess/tool thật.
 - `TASK-0204` review PASS và chuyển sang DONE; ghi nhận non-blocker workflow chạy avbtool thật phải qua `WslRunner` và GUI Analyze phải cảnh báo đỏ khi có Hash/Hashtree descriptor.
 - `TASK-0205`, `TASK-0206`, `TASK-0207` implement xong và chuyển sang REVIEW; super.img metadata foundation chỉ detect/parse/build preview, chưa chạy tool thật.
+- `TASK-0205`, `TASK-0206`, `TASK-0207` review PASS và chuyển sang DONE; ghi nhận non-blocker cần bổ sung fixture khi gặp `lpdump` thực tế khác, verify command với binary `lpmake` thật, và lấy `size_override` từ resize planner/ext4 image.
+- `TASK-0208`, `TASK-0209` implement xong và chuyển sang REVIEW; Partition Explorer state foundation chỉ gom filesystem/report state, chưa chạy tool thật.
 
 ### Added
 
@@ -58,3 +60,6 @@
 - `core/lpmake_builder.py` build lpmake command preview từ parsed metadata, có group-size validation và shell-quoted preview string.
 - `tests/test_sparse_image.py`, `tests/test_lpdump_parser.py`, `tests/test_lpmake_builder.py`.
 - Expanded lpdump fixtures for RK3318 A/B and non-A/B layouts.
+- `core/partition_explorer.py` với `PartitionExplorerResult`, image nodes, dynamic partition nodes và AVB summary.
+- `core/project_state.py` lưu project/Partition Explorer state ra JSON UTF-8, có schema version và partition extracted/modified flags.
+- `tests/test_partition_explorer.py` và `tests/test_project_state.py`.
