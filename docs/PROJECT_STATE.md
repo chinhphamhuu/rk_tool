@@ -12,9 +12,28 @@
 - Tab Unpack chuyển thành Partition Explorer.
 - Tab Repack đổi thành `Repack & Verify`, tự verify offline sau khi repack.
 
-`TASK-0001` đã review PASS và DONE. `TASK-0101` đã review PASS và DONE. `TASK-0101B` đã review PASS và DONE. `TASK-0102` đã review PASS và DONE. `TASK-0103` đã review PASS và DONE. `TASK-0104` đã review PASS và DONE. `TASK-0200` đã review PASS và DONE. `TASK-0203` đã review PASS và DONE. `TASK-0204` đã review PASS và DONE. `TASK-0205`, `TASK-0206` và `TASK-0207` đã review PASS và DONE. `TASK-0208` và `TASK-0209` đã review PASS và DONE. `TASK-0301`, `TASK-0302` và `TASK-0303` đã implement xong và đang ở REVIEW.
+`TASK-0001` đã review PASS và DONE. `TASK-0101` đã review PASS và DONE. `TASK-0101B` đã review PASS và DONE. `TASK-0102` đã review PASS và DONE. `TASK-0103` đã review PASS và DONE. `TASK-0104` đã review PASS và DONE. `TASK-0200` đã review PASS và DONE. `TASK-0203` đã review PASS và DONE. `TASK-0204` đã review PASS và DONE. `TASK-0205`, `TASK-0206` và `TASK-0207` đã review PASS và DONE. `TASK-0208` và `TASK-0209` đã review PASS và DONE. `TASK-0301`, `TASK-0302` và `TASK-0303` đã review PASS và DONE.
 
 ## Review mới nhất
+
+`TASK-0301/0302/0303 — GUI Project + Unpack state wiring`:
+
+- PASS: Project tab cho chọn ROM gốc, nhập project name, chọn APK tùy chọn và lưu `selected_apk_path`.
+- PASS: Project dir được tạo dưới `APP_ROOT/workspace/projects/<project_name>` với đủ folder MVP và `project_state.json`.
+- PASS: Không copy ROM lớn, project trùng tên bị reject rõ ràng.
+- PASS: Workspace không cho chọn thủ công; tool path không cho chọn thủ công; bundled tools chỉ hiển thị read-only OK/MISSING.
+- PASS: Unpack tab đọc current project state từ MainWindow và cảnh báo rõ khi chưa có project.
+- PASS: Refresh gọi `build_partition_explorer()` với `image_dir`, optional `vbmeta_info.txt`, optional `lpdump_original.txt`, và `editable_dir`.
+- PASS: Detected images table, dynamic partitions table và AVB summary hiển thị từ core result.
+- PASS: Refresh cập nhật và save `project_state.json`; `Image/` rỗng không crash và có warning.
+- PASS: Action chạy tool thật vẫn disabled/log-only.
+- PASS: MainWindow giữ `current_project_state`/`current_project_state_path`, nhận signal từ Project tab và truyền sang Unpack tab.
+- PASS: Sidebar vẫn đúng 7 tab, không thêm Setup tab hoặc Verify tab riêng.
+- PASS: Không dùng global state lung tung, không gọi WSL/subprocess/tool thật.
+- PASS: Tests pass: `test_gui_project_state_flow.py`, `test_gui_unpack_partition_flow.py`, `compileall`, smoke test và full pytest.
+- Non-blocker: Sau này nên chặn thêm Windows reserved project names như `CON`, `PRN`, `AUX`, `NUL`.
+- Non-blocker: Sau này `ProjectTab` nên catch `OSError`/`ProjectStateError` để báo lỗi quyền ghi/save JSON đẹp hơn.
+- Non-blocker: Task sau mới tạo `vbmeta_info.txt` và `lpdump_original.txt` thật qua `WslRunner`.
 
 `TASK-0208/0209 — Partition Explorer state foundation`:
 
@@ -278,6 +297,5 @@
 
 ## Task tiếp theo đề xuất
 
-1. Review `TASK-0301/0302/0303 — GUI Project + Unpack state wiring` theo checklist.
-2. Nếu review PASS, chuyển `TASK-0301`, `TASK-0302`, `TASK-0303` sang DONE.
-3. Task sau mới chạy unpack/analyze tool thật qua `WslRunner`.
+1. Task sau mới chạy unpack/analyze tool thật qua `WslRunner`.
+2. Review task tiếp theo theo `docs/REVIEW_CHECKLIST.md` khi có implementation mới.

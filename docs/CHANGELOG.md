@@ -30,6 +30,7 @@
 - `TASK-0208`, `TASK-0209` implement xong và chuyển sang REVIEW; Partition Explorer state foundation chỉ gom filesystem/report state, chưa chạy tool thật.
 - `TASK-0208`, `TASK-0209` review PASS và chuyển sang DONE; ghi nhận non-blocker cần chuẩn hóa `image_dir`, truyền source image root rõ hơn và chạy `avbtool`/`lpdump` thật qua `WslRunner` ở task sau.
 - `TASK-0301`, `TASK-0302`, `TASK-0303` implement xong và chuyển sang REVIEW; GUI Project/Unpack bắt đầu nối với core state nhưng chưa chạy unpack/analyze tool thật.
+- `TASK-0301`, `TASK-0302`, `TASK-0303` review PASS và chuyển sang DONE; ghi nhận non-blocker cần chặn Windows reserved project names, cải thiện lỗi quyền ghi/save JSON, và tạo report thật qua `WslRunner` ở task sau.
 
 ### Added
 

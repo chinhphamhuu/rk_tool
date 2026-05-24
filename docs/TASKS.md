@@ -544,7 +544,7 @@ Reviewer notes:
 ## Phase 3 — GUI core state wiring
 
 ### TASK-0301 — Wire Project tab to ProjectState
-Status: REVIEW
+Status: DONE
 
 Scope:
 - Connect `gui/project_tab.py` to `core/project_state.py`, `core/app_paths.py`, and `core/tool_config.py`.
@@ -568,8 +568,22 @@ Implementation notes:
 - Added `selected_apk_path` to `ProjectState` without breaking existing JSON load.
 - No WSL, subprocess, GUI workspace picker, tool path picker, ROM copy, or real tool calls were added.
 
+Reviewer notes:
+- PASS: Project tab allows selecting original `update.img`, entering project name, and optionally selecting APK.
+- PASS: Optional APK path is saved as `selected_apk_path` in project state.
+- PASS: Project dir is created under `APP_ROOT/workspace/projects/<project_name>`.
+- PASS: Creates required folders: `work/`, `work/update/`, `work/update/Image/`, `work/reports/`, `work/parts/`, `work/modified/`, `editable/`, `output/`, `logs/`.
+- PASS: Saves `project_state.json` and does not copy large ROM files.
+- PASS: Existing project names are rejected clearly.
+- PASS: Workspace and tool paths cannot be selected manually.
+- PASS: Bundled tools are shown read-only with OK/MISSING status.
+- PASS: Does not call WSL, subprocess, or real ROM tools.
+- PASS: Tests pass: `tests/test_gui_project_state_flow.py`, `compileall`, smoke test, and full pytest.
+- Non-blocker: Later task should reject Windows reserved project names such as `CON`, `PRN`, `AUX`, and `NUL`.
+- Non-blocker: `ProjectTab` should later catch `OSError`/`ProjectStateError` for nicer write/save permission errors.
+
 ### TASK-0302 — Wire Unpack tab to PartitionExplorer
-Status: REVIEW
+Status: DONE
 
 Scope:
 - Connect `gui/unpack_tab.py` to `core/partition_explorer.py` and `core/project_state.py`.
@@ -594,8 +608,22 @@ Implementation notes:
 - Detected image and dynamic partition tables can now be populated from core state.
 - No WSL, subprocess, unpack/repack, or real tool calls were added.
 
+Reviewer notes:
+- PASS: Unpack tab reads current project state from MainWindow.
+- PASS: Missing project shows a clear warning and does not crash.
+- PASS: Refresh calls `build_partition_explorer()` with `image_dir`, optional `vbmeta_info.txt`, optional `lpdump_original.txt`, and `editable_dir`.
+- PASS: Detected images table is populated from core result.
+- PASS: Dynamic partitions table is populated from core result.
+- PASS: AVB summary is populated from core result.
+- PASS: Refresh updates and saves `project_state.json`.
+- PASS: Empty `Image/` folder does not crash and shows a clear warning.
+- PASS: Real tool actions remain disabled/log-only.
+- PASS: Does not call WSL, subprocess, or real ROM tools.
+- PASS: Tests pass: `tests/test_gui_unpack_partition_flow.py`, `compileall`, smoke test, and full pytest.
+- Non-blocker: Later task will create real `vbmeta_info.txt` and `lpdump_original.txt` through `WslRunner`.
+
 ### TASK-0303 — Add GUI state loading/saving flow
-Status: REVIEW
+Status: DONE
 
 Scope:
 - Add simple GUI state holder flow between Project tab, MainWindow, and Unpack tab.
@@ -615,3 +643,13 @@ Implementation notes:
 - `MainWindow` wires Project tab signals to Unpack tab via `_set_project_state()`.
 - Status bar shows current project name after create/load.
 - Existing mock UI for other tabs is unchanged.
+
+Reviewer notes:
+- PASS: `MainWindow` holds `current_project_state` and `current_project_state_path`.
+- PASS: Project tab emits `project_created` and `project_loaded`.
+- PASS: MainWindow receives project state and passes it to Unpack tab.
+- PASS: Unpack tab emits `project_state_updated` after refresh.
+- PASS: Sidebar remains exactly 7 tabs: Project, Unpack, Analyze, Edit ROM Folder, Apply Changes, Rebuild Super, Repack & Verify.
+- PASS: No Setup tab and no separate Verify tab were added.
+- PASS: Does not use uncontrolled global state.
+- PASS: Tests pass: `compileall`, smoke test, full pytest, and offscreen GUI instantiate with 7 tabs.
