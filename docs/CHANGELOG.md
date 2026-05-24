@@ -12,6 +12,7 @@
 - `TASK-0450`, `TASK-0451`, `TASK-0452` implement xong va chuyen sang REVIEW.
 - `TASK-0450`, `TASK-0451`, `TASK-0452` review PASS va chuyen sang DONE.
 - `TASK-0510`, `TASK-0511`, `TASK-0512`, `TASK-0513` implement xong va chuyen sang REVIEW; editable extraction dung debugfs rdump read-only qua runner.
+- `TASK-0510`, `TASK-0511`, `TASK-0512`, `TASK-0513` review PASS va chuyen sang DONE; ghi nhan non-blocker can chay `debugfs rdump` tren ROM lon qua worker thread/QThread de GUI khong bi do.
 - `TASK-0401`, `TASK-0402`, `TASK-0403` implement xong va chuyen sang REVIEW; backend unpack/analyze workflow foundation build command qua runner interface, tests dung fake runner va chua repack/apply/flash.
 - `TASK-0401`, `TASK-0402`, `TASK-0403` review PASS va chuyen sang DONE.
 - `TASK-0410`, `TASK-0411`, `TASK-0501`, `TASK-0502`, `TASK-0503` implement xong va chuyen sang REVIEW; GUI Unpack da noi backend unpack/analyze va lpunpack workflow qua runner interface.

@@ -926,7 +926,7 @@ Reviewer notes:
 ## Phase 7 - Editable folder extraction
 
 ### TASK-0510 - Implement ext4 image inspection foundation
-Status: REVIEW
+Status: DONE
 
 Scope:
 - Add `core/ext4_image.py`.
@@ -947,8 +947,11 @@ Implementation notes:
 - Added `Ext4ImageInfo` and `Ext4ImageError`.
 - Helpers only build commands and parse report text; they do not run tools.
 
+Reviewer notes:
+- PASS (2026-05-24): `core/ext4_image.py` builds `e2fsck`, `dumpe2fs`, and `debugfs rdump` commands correctly through runner-based helpers, with no direct subprocess/WSL invocation.
+
 ### TASK-0511 - Implement extract partition image to editable folder workflow
-Status: REVIEW
+Status: DONE
 
 Scope:
 - Add `core/editable_extractor.py`.
@@ -970,8 +973,11 @@ Implementation notes:
 - Added `EditableExtractResult` and `EditableExtractError`.
 - No sudo, loop mount, apply diff, resize, rebuild, repack or flash logic was added.
 
+Reviewer notes:
+- PASS (2026-05-24): `core/editable_extractor.py` extracts partition images into `editable/<partition>/` using `debugfs rdump` through the runner, writes e2fsck/dumpe2fs reports and manifest, and tests use a fake runner without real WSL dependency.
+
 ### TASK-0512 - Wire Edit ROM Folder tab to extracted editable folders
-Status: REVIEW
+Status: DONE
 
 Scope:
 - Connect `gui/edit_rom_tab.py` to project state and editable extraction workflow.
@@ -991,8 +997,12 @@ Implementation notes:
 - Added testable helpers `list_editable_partition_rows()` and `extract_editable_partition_backend()`.
 - MainWindow now forwards current project state to Edit ROM Folder tab.
 
+Reviewer notes:
+- PASS (2026-05-24): `gui/edit_rom_tab.py` connects Edit ROM Folder to project state and backend extraction, and GUI code does not call subprocess directly.
+- Non-blocker for follow-up: real `debugfs rdump` jobs on large ROMs should run via worker thread/QThread so the GUI stays responsive.
+
 ### TASK-0513 - Update project state after editable extraction
-Status: REVIEW
+Status: DONE
 
 Scope:
 - Persist editable partition dirs after extraction.
@@ -1009,3 +1019,6 @@ Acceptance:
 Implementation notes:
 - `modified_partitions` is not changed by editable extraction.
 - `get_partition_source_image()` still prefers modified images, then lpunpack parts images, then default `work/parts`.
+
+Reviewer notes:
+- PASS (2026-05-24): `core/project_state.py` persists `editable_partitions`/`extracted_partitions` and updates `dynamic_partitions[].editable_dir` correctly.
