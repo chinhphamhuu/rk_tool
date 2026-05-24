@@ -1,2 +1,18 @@
+Algorithm: SHA256_RSA4096
+Rollback Index: 4
+Flags: 0
+Descriptors:
 Hash descriptor:
-Partition Name: system
+  Image Size: 123456 bytes
+  Partition Name: system
+  Salt: abcdef
+  Digest: 11112222
+Hashtree descriptor:
+  Partition Name: product
+  Root Digest: 33334444
+  Salt: 55556666
+Hash descriptor:
+  Image Size: 654321
+  Partition Name: vendor
+  Salt: 77778888
+  Digest: 9999aaaa

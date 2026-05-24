@@ -12,7 +12,7 @@
 - Tab Unpack chuyển thành Partition Explorer.
 - Tab Repack đổi thành `Repack & Verify`, tự verify offline sau khi repack.
 
-`TASK-0001` đã review PASS và DONE. `TASK-0101` đã review PASS và DONE. `TASK-0101B` đã review PASS và DONE. `TASK-0102` đã review PASS và DONE. `TASK-0103` đã review PASS và DONE. `TASK-0104` đã review PASS và DONE. `TASK-0200` đã review PASS và DONE. `TASK-0203` đã review PASS và DONE.
+`TASK-0001` đã review PASS và DONE. `TASK-0101` đã review PASS và DONE. `TASK-0101B` đã review PASS và DONE. `TASK-0102` đã review PASS và DONE. `TASK-0103` đã review PASS và DONE. `TASK-0104` đã review PASS và DONE. `TASK-0200` đã review PASS và DONE. `TASK-0203` đã review PASS và DONE. `TASK-0204 — Implement core/avb.py AVB/vbmeta info parser` đã implement xong và đang ở REVIEW.
 
 ## Review mới nhất
 
@@ -100,6 +100,17 @@
 
 ## Implementation mới nhất
 
+`TASK-0204 — Implement core/avb.py AVB/vbmeta info parser`:
+
+- `core/avb.py` parse text report từ output dạng `info_image --image vbmeta.img`.
+- Added `AvbInfo`, `AvbDescriptor`, `AvbParseError`, `parse_avb_info_text()`, `load_avb_info_report()` và `classify_avb_risk()`.
+- Parse `Algorithm`, `Flags`, `Rollback Index`, Hash descriptor và Hashtree descriptor.
+- Detect `has_hash_descriptor`, `has_hashtree_descriptor`, `affected_partitions`, `is_disable_verification_likely`, `risk_level` và `warnings`.
+- Có warning rõ khi ROM có AVB descriptors: sửa partition liên quan có thể bootloop nếu AVB không được xử lý đúng.
+- Không hard-code chỉ `system/product/vendor`; descriptor partition bất kỳ như `odm`, `system_ext`, `vendor_boot` vẫn được đưa vào `affected_partitions`.
+- Không gọi WSL, subprocess, `avbtool.py`, ROM tool thật hoặc GUI.
+- Tests pass: `tests/test_avb.py`, `compileall`, smoke test và full pytest.
+
 `TASK-0203 — Image detector core`:
 
 - `core/image_detector.py` scan thư mục RKAF `Image/` bằng Python filesystem APIs.
@@ -181,5 +192,6 @@
 
 ## Task tiếp theo đề xuất
 
-1. Implement backend wiring cho Project/Unpack sau khi core foundation tiếp tục ổn định.
-2. Review task tiếp theo theo `docs/REVIEW_CHECKLIST.md` khi có implementation mới.
+1. Review `TASK-0204 — core/avb.py`.
+2. Nếu review PASS, chuyển `TASK-0204` sang DONE.
+3. Implement backend wiring cho Project/Unpack sau khi core foundation tiếp tục ổn định.

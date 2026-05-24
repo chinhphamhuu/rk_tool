@@ -23,6 +23,7 @@
 - `TASK-0104` review PASS và chuyển sang DONE; ghi nhận non-blocker cho validate MD5 tail hex và guard output trùng repacked ở task sau.
 - `TASK-0203` implement xong và chuyển sang REVIEW; image detector chỉ scan filesystem bằng Python thuần, không gọi WSL/subprocess/tool thật.
 - `TASK-0203` review PASS và chuyển sang DONE; ghi nhận non-blocker thêm cảnh báo riêng khi sửa/rebuild `super.img` ở task sau.
+- `TASK-0204` implement xong và chuyển sang REVIEW; AVB/vbmeta parser chỉ parse text report mẫu, không gọi WSL/subprocess/tool thật.
 
 ### Added
 
@@ -48,3 +49,5 @@
 - `tests/test_rkfw_md5.py` coverage cho header, MD5 tail, verify true/false, rewrite tail, fix header+tail và lỗi file quá nhỏ.
 - `core/image_detector.py` với `scan_image_dir()`/`detect_images()` và metadata cho image trong RKAF `Image/`.
 - `tests/test_image_detector.py` coverage cho known images, unknown `.img`, empty folder và no WSL/subprocess/tool calls.
+- `core/avb.py` với `AvbInfo`, `AvbDescriptor`, parser text report, risk classifier và warning AVB descriptor.
+- `tests/test_avb.py` và fixtures vbmeta text cho no-descriptor và Hash/Hashtree descriptor cases.

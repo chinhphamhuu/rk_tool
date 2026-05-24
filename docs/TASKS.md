@@ -275,3 +275,40 @@ Reviewer notes:
 - PASS: Metadata trả về đủ `name`, `path`, `size_bytes`, `type`, `risk_level`, `supported_actions`.
 - PASS: Tests pass: `tests/test_image_detector.py`, `compileall`, smoke test và full pytest.
 - Non-blocker: `super.img` risk `safe` chấp nhận được cho analyze/unpack; khi làm rebuild super/lpmake thật cần thêm cảnh báo riêng vì sửa `super.img` vẫn có rủi ro.
+
+### TASK-0204 — Implement `core/avb.py` AVB/vbmeta info parser
+Status: REVIEW
+
+Scope:
+- Implement `core/avb.py`.
+- Parse text output from `info_image --image vbmeta.img` reports only.
+- Do not call WSL, subprocess or any ROM tool.
+- Do not parse binary `vbmeta.img` in this task.
+- Do not modify GUI.
+
+Acceptance:
+- `parse_avb_info_text(text) -> AvbInfo`.
+- `load_avb_info_report(path) -> AvbInfo`.
+- `classify_avb_risk(info) -> str`.
+- Parse `Algorithm`, `Flags`, `Rollback Index` and descriptor blocks.
+- Parse safe/no-descriptor reports such as `Algorithm: NONE`, `Flags: 2`, `Descriptors: none`.
+- Parse Hash descriptor partition metadata.
+- Parse Hashtree descriptor partition metadata.
+- Detect multiple descriptors and de-duplicate `affected_partitions`.
+- `flags` parsed as `int`.
+- Risk is `low` for no descriptors with likely disabled verification.
+- Risk is `danger` when Hash/Hashtree descriptors exist.
+- Empty or unrecognized text raises `AvbParseError`.
+- No WSL, subprocess or real tool calls.
+- `tests/test_avb.py` pass.
+- `python -m compileall .` pass.
+- `python app.py --smoke-test` pass.
+- `python -m pytest` pass.
+
+Implementation notes:
+- Added `AvbInfo`, `AvbDescriptor` and `AvbParseError`.
+- Parser reads report text only; real tool execution stays for a later workflow task via `WslRunner`.
+- `warnings` explicitly warn when AVB descriptors may cause bootloop if modified partitions are not handled correctly.
+- `affected_partitions` keeps detected partition names without hard-coding system/product/vendor only.
+- Added fixtures `vbmeta_algorithm_none.txt` and `vbmeta_with_descriptors.txt`.
+- Tests pass: `tests/test_avb.py`, `compileall`, smoke test and full pytest.
