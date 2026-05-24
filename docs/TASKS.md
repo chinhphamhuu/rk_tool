@@ -658,7 +658,7 @@ Reviewer notes:
 ## Phase 4 - Real unpack/analyze workflow foundation
 
 ### TASK-0401 - Implement RKFW/RKAF unpack workflow
-Status: REVIEW
+Status: DONE
 
 Scope:
 - Add `core/rkaf.py` workflow foundation for unpacking RKFW then RKAF through the provided runner.
@@ -681,8 +681,16 @@ Implementation notes:
 - `core/tool_config.py` now checks the standard binary path `tools/afptool-rs/afptool-rs`.
 - No GUI, ROM repack, WSL direct call, subprocess direct call, or real tool invocation was added.
 
+Reviewer notes:
+- PASS: RKFW/RKAF unpack workflow build command qua runner interface.
+- PASS: Missing afptool-rs/missing embedded-update.img báo lỗi rõ.
+- PASS: Tests dùng fake runner, không phụ thuộc WSL/tool thật.
+- PASS: Không sửa GUI, không repack, không apply diff, không flash.
+- PASS: Không gọi subprocess trực tiếp ngoài `core/wsl_runner.py`.
+- Non-blocker: Sau này khi nối GUI thật nên verify `Image/` có file thực tế sau unpack, không chỉ tạo folder.
+
 ### TASK-0402 - Implement super.img analyze workflow
-Status: REVIEW
+Status: DONE
 
 Scope:
 - Add `core/super_image.py` workflow foundation for sparse/raw detection and lpdump report generation.
@@ -704,8 +712,16 @@ Implementation notes:
 - `core/tool_config.py` now checks `tools/lptools/simg2img`.
 - No GUI, lpunpack, lpmake, repack, direct WSL call, subprocess direct call, or real tool invocation was added.
 
+Reviewer notes:
+- PASS: super.img sparse/raw analyze workflow build simg2img/lpdump command đúng.
+- PASS: Missing super.img/simg2img/lpdump báo lỗi rõ.
+- PASS: Tests dùng fake runner, không phụ thuộc WSL/tool thật.
+- PASS: Không sửa GUI, không repack, không apply diff, không flash.
+- PASS: Không gọi subprocess trực tiếp ngoài `core/wsl_runner.py`.
+- Non-blocker: GUI task sau nên catch `WslCommandError`/`WslCommandTimeout` để hiển thị lỗi đẹp.
+
 ### TASK-0403 - Generate vbmeta/lpdump reports for Partition Explorer
-Status: REVIEW
+Status: DONE
 
 Scope:
 - Add `core/workflow.py` combined unpack/analyze foundation.
@@ -726,3 +742,12 @@ Implementation notes:
 - Added `WorkflowError` and `RomAnalyzeWorkflowResult`.
 - Workflow preserves warnings for missing `super.img`/`vbmeta.img` and parser warnings.
 - No GUI, repack final, apply diff, resize, flash, direct WSL call, subprocess direct call, or real tool invocation was added.
+
+Reviewer notes:
+- PASS: vbmeta report command dùng avbtool.py qua runner.
+- PASS: Missing vbmeta.img không crash.
+- PASS: Combined workflow refresh Partition Explorer và update project_state.
+- PASS: Tests dùng fake runner, không phụ thuộc WSL/tool thật.
+- PASS: Không sửa GUI, không repack, không apply diff, không flash.
+- PASS: Không gọi subprocess trực tiếp ngoài `core/wsl_runner.py`.
+- Non-blocker: Khi có tool thật cần test command với ROM thật và bổ sung fixture nếu output khác.

@@ -5,6 +5,7 @@
 ### Changed
 
 - `TASK-0401`, `TASK-0402`, `TASK-0403` implement xong va chuyen sang REVIEW; backend unpack/analyze workflow foundation build command qua runner interface, tests dung fake runner va chua repack/apply/flash.
+- `TASK-0401`, `TASK-0402`, `TASK-0403` review PASS va chuyen sang DONE.
 
 - UX bỏ tab Setup.
 - UX bỏ tab Verify riêng.

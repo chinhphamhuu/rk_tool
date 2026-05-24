@@ -301,11 +301,12 @@
 2. Review task tiếp theo theo `docs/REVIEW_CHECKLIST.md` khi có implementation mới.
 ## Backend unpack/analyze workflow foundation
 
-- `TASK-0401`, `TASK-0402`, `TASK-0403` da implement xong va chuyen sang REVIEW.
+- `TASK-0401`, `TASK-0402`, `TASK-0403` da review PASS va DONE.
 - Da co `core/rkaf.py` de build workflow unpack RKFW/RKAF qua runner interface.
 - Da co `core/super_image.py` de detect sparse/raw `super.img`, build command `simg2img` khi can, build `lpdump` report command va parse report neu co.
 - Da co `core/workflow.py` de tao `vbmeta_info.txt`, `lpdump_original.txt`, refresh Partition Explorer va update `project_state.json`.
 - `core/tool_config.py` da bo sung tool path chuan `tools/lptools/simg2img` va `tools/afptool-rs/afptool-rs`.
 - Tests dung fake runner/mock filesystem, khong phu thuoc WSL hoac tool that.
 - Tool that co the missing; workflow raise loi ro ten tool va path missing, khong chay tiep command sai.
-- Chua repack ROM final, chua apply diff/debugfs, chua resize partition, chua flash thiet bi.
+- Backend hien da co foundation cho unpack/analyze that qua `WslRunner` interface.
+- Van chua noi GUI button that, chua `lpunpack` dynamic partitions, chua extract editable folder, chua apply diff/debugfs, chua rebuild super, chua repack final.
