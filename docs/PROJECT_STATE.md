@@ -12,7 +12,7 @@
 - Tab Unpack chuyển thành Partition Explorer.
 - Tab Repack đổi thành `Repack & Verify`, tự verify offline sau khi repack.
 
-`TASK-0001` đã review PASS và DONE. `TASK-0101` đã review PASS và DONE. `TASK-0101B` đã review PASS và DONE. `TASK-0102` đã review PASS và DONE. `TASK-0103` đã review PASS và DONE. `TASK-0104` đã review PASS và DONE. `TASK-0200` đã review PASS và DONE. `TASK-0203` đã review PASS và DONE. `TASK-0204` đã review PASS và DONE.
+`TASK-0001` đã review PASS và DONE. `TASK-0101` đã review PASS và DONE. `TASK-0101B` đã review PASS và DONE. `TASK-0102` đã review PASS và DONE. `TASK-0103` đã review PASS và DONE. `TASK-0104` đã review PASS và DONE. `TASK-0200` đã review PASS và DONE. `TASK-0203` đã review PASS và DONE. `TASK-0204` đã review PASS và DONE. `TASK-0205`, `TASK-0206` và `TASK-0207` đã implement xong và đang ở REVIEW.
 
 ## Review mới nhất
 
@@ -116,6 +116,20 @@
 
 ## Implementation mới nhất
 
+`TASK-0205/0206/0207 — super.img metadata foundation`:
+
+- `core/sparse_image.py` detect Android sparse magic `3A FF 26 ED` bằng Python file I/O, chỉ đọc 4 byte header.
+- `core/lpdump_parser.py` parse lpdump text thành `SuperMetadata`, `DynamicGroup`, `DynamicPartition`.
+- Parser hỗ trợ A/B (`system_a`, `product_a`, `vendor_a`, `odm_a`, `system_ext_a`) và non-A/B (`system`, `product`, `vendor`, `odm`, `system_ext`) qua fixtures.
+- Partition lạ như `vendor_boot` vẫn được parse, không hard-code chỉ RK3318 hoặc chỉ `product_a/system_a`.
+- `core/lpmake_builder.py` build preview command từ metadata đã parse, gồm group/partition/image/output/sparse args.
+- `LpMakeImageSource` hỗ trợ override partition size khi image đã resize.
+- Có validate tổng size partition trong group không vượt `maximum_size`.
+- Path có dấu cách được quote trong preview string; Unicode tiếng Việt được giữ nguyên.
+- Chưa gọi `simg2img`, `lpdump`, `lpunpack`, `lpmake`, WSL, subprocess hoặc ROM tool thật.
+- `lpmake` sau này phải chạy qua `core/wsl_runner.py`.
+- Tests pass: `tests/test_sparse_image.py`, `tests/test_lpdump_parser.py`, `tests/test_lpmake_builder.py`, `compileall`, smoke test và full pytest.
+
 `TASK-0204 — Implement core/avb.py AVB/vbmeta info parser`:
 
 - `core/avb.py` parse text report từ output dạng `info_image --image vbmeta.img`.
@@ -208,5 +222,6 @@
 
 ## Task tiếp theo đề xuất
 
-1. Implement backend wiring cho Project/Unpack sau khi core foundation tiếp tục ổn định.
-2. Review task tiếp theo theo `docs/REVIEW_CHECKLIST.md` khi có implementation mới.
+1. Review `TASK-0205/0206/0207 — super.img metadata foundation`.
+2. Nếu review PASS, chuyển `TASK-0205`, `TASK-0206`, `TASK-0207` sang DONE.
+3. Implement backend wiring cho Project/Unpack sau khi core foundation tiếp tục ổn định.

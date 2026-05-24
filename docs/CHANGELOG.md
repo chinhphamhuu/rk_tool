@@ -25,6 +25,7 @@
 - `TASK-0203` review PASS và chuyển sang DONE; ghi nhận non-blocker thêm cảnh báo riêng khi sửa/rebuild `super.img` ở task sau.
 - `TASK-0204` implement xong và chuyển sang REVIEW; AVB/vbmeta parser chỉ parse text report mẫu, không gọi WSL/subprocess/tool thật.
 - `TASK-0204` review PASS và chuyển sang DONE; ghi nhận non-blocker workflow chạy avbtool thật phải qua `WslRunner` và GUI Analyze phải cảnh báo đỏ khi có Hash/Hashtree descriptor.
+- `TASK-0205`, `TASK-0206`, `TASK-0207` implement xong và chuyển sang REVIEW; super.img metadata foundation chỉ detect/parse/build preview, chưa chạy tool thật.
 
 ### Added
 
@@ -52,3 +53,8 @@
 - `tests/test_image_detector.py` coverage cho known images, unknown `.img`, empty folder và no WSL/subprocess/tool calls.
 - `core/avb.py` với `AvbInfo`, `AvbDescriptor`, parser text report, risk classifier và warning AVB descriptor.
 - `tests/test_avb.py` và fixtures vbmeta text cho no-descriptor và Hash/Hashtree descriptor cases.
+- `core/sparse_image.py` detect Android sparse magic bằng Python thuần.
+- `core/lpdump_parser.py` parse lpdump text thành super metadata, dynamic groups và dynamic partitions.
+- `core/lpmake_builder.py` build lpmake command preview từ parsed metadata, có group-size validation và shell-quoted preview string.
+- `tests/test_sparse_image.py`, `tests/test_lpdump_parser.py`, `tests/test_lpmake_builder.py`.
+- Expanded lpdump fixtures for RK3318 A/B and non-A/B layouts.

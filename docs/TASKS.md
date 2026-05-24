@@ -328,3 +328,86 @@ Reviewer notes:
 - Non-blocker: Workflow chạy `avbtool.py` thật phải làm ở task sau và đi qua `WslRunner`.
 - Non-blocker: GUI Analyze tab sau này phải hiện cảnh báo đỏ nếu có Hash/Hashtree descriptor.
 - Non-blocker: Không được kết luận chắc chắn AVB đã tắt, chỉ dùng wording `likely disabled` / `requires attention`.
+
+### TASK-0205 — Implement `core/sparse_image.py`
+Status: REVIEW
+
+Scope:
+- Detect Android sparse image format with Python file I/O only.
+- Do not call WSL, subprocess, `simg2img` or ROM tools.
+- Do not modify GUI.
+
+Acceptance:
+- `read_magic(path) -> bytes` reads only the 4 byte header.
+- `is_android_sparse_image(path) -> bool` detects magic `0xED26FF3A` stored as bytes `3A FF 26 ED`.
+- `classify_image_format(path) -> str` returns `android_sparse` or `raw_or_unknown`.
+- Missing or too-small files raise `SparseImageError` clearly.
+- `tests/test_sparse_image.py` pass.
+- `python -m compileall .` pass.
+- `python app.py --smoke-test` pass.
+- `python -m pytest` pass.
+
+Implementation notes:
+- Added `ANDROID_SPARSE_MAGIC`, `SparseImageError`, `read_magic()`, `is_android_sparse_image()` and `classify_image_format()`.
+- Only the first 4 bytes are read; large images are not loaded into RAM.
+- No WSL, subprocess, `simg2img`, GUI or ROM tool calls were added.
+- Tests pass: `tests/test_sparse_image.py`, `compileall`, smoke test and full pytest.
+
+### TASK-0206 — Implement `core/lpdump_parser.py`
+Status: REVIEW
+
+Scope:
+- Parse text output from `lpdump` reports.
+- Do not call WSL, subprocess, `lpdump` or ROM tools.
+- Do not modify GUI.
+
+Acceptance:
+- `parse_lpdump_text(text) -> SuperMetadata`.
+- `load_lpdump_report(path) -> SuperMetadata`.
+- Parse metadata size, metadata slots, block size, device size and optional alignment.
+- Parse dynamic groups with maximum size and flags.
+- Parse dynamic partitions with name, group, size, readonly/attributes and extent count.
+- Support A/B partitions such as `system_a`, `product_a`, `vendor_a`, `odm_a`, `system_ext_a`.
+- Support non-A/B partitions such as `system`, `product`, `vendor`, `odm`, `system_ext`.
+- Unknown partition names are preserved.
+- Empty text or missing required fields raise `LpDumpParseError`.
+- `tests/test_lpdump_parser.py` pass.
+- `python -m compileall .` pass.
+- `python app.py --smoke-test` pass.
+- `python -m pytest` pass.
+
+Implementation notes:
+- Added `SuperMetadata`, `DynamicGroup`, `DynamicPartition`, `LpDumpParseError`, `parse_lpdump_text()` and `load_lpdump_report()`.
+- Parser uses tolerant key/value and block scanning instead of a single rigid layout.
+- Updated A/B and non-A/B fixtures with group and partition metadata.
+- No WSL, subprocess, `lpdump`, GUI or ROM tool calls were added.
+- Tests pass: `tests/test_lpdump_parser.py`, `compileall`, smoke test and full pytest.
+
+### TASK-0207 — Implement `core/lpmake_builder.py`
+Status: REVIEW
+
+Scope:
+- Build preview command for `lpmake` from parsed `SuperMetadata`.
+- Do not call WSL, subprocess, `lpmake` or ROM tools.
+- Do not modify GUI.
+
+Acceptance:
+- Added `LpMakeImageSource`, `LpMakeCommand` and `build_lpmake_command()`.
+- Command preview includes metadata size, metadata slots, device size, block size, optional alignment, groups, partitions, images, sparse flag and output path.
+- Values are built from parsed metadata and image source inputs, not hard-coded for one ROM.
+- Missing image source raises `LpMakeBuildError` by default.
+- Partition size override is supported.
+- Group size validation raises `LpMakeBuildError` when effective partition sizes exceed maximum group size.
+- Paths with spaces are shell-quoted safely in preview string.
+- Unicode paths are preserved.
+- `tests/test_lpmake_builder.py` pass.
+- `python -m compileall .` pass.
+- `python app.py --smoke-test` pass.
+- `python -m pytest` pass.
+
+Implementation notes:
+- `LpMakeCommand.args` keeps unquoted argv-style tokens; `command_string` is a safely quoted shell preview.
+- Supports `sparse=True` and `sparse=False`.
+- Uses parsed group and partition metadata from `SuperMetadata`.
+- No WSL, subprocess, `lpmake`, GUI or ROM tool calls were added.
+- Tests pass: `tests/test_lpmake_builder.py`, `compileall`, smoke test and full pytest.

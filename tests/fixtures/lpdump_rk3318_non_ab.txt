@@ -1,1 +1,40 @@
 Metadata version: 10.2
+Metadata max size: 65536
+Metadata slots: 2
+Block size: 4096
+Device size: 2684354560
+Alignment: 1048576
+
+Partition group: rockchip_dynamic_partitions
+Max size: 2675965952
+Flags: none
+
+Partition: system
+Group: rockchip_dynamic_partitions
+Size: 1073741824
+Attributes: readonly
+Extent count: 1
+
+Partition: product
+Group: rockchip_dynamic_partitions
+Size: 536870912
+Attributes: readonly
+Extent count: 1
+
+Partition: vendor
+Group: rockchip_dynamic_partitions
+Size: 402653184
+Attributes: readonly
+Extent count: 1
+
+Partition: odm
+Group: rockchip_dynamic_partitions
+Size: 134217728
+Attributes: readonly
+Extent count: 1
+
+Partition: system_ext
+Group: rockchip_dynamic_partitions
+Size: 268435456
+Attributes: readonly
+Extent count: 1
