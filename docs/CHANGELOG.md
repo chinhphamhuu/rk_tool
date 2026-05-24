@@ -10,6 +10,7 @@
 - Updated `tools/README.md` with normalize/check commands and the standard app-local tool layout.
 - Added `tests/test_tools_layout.py` to validate standardized tool paths and guard runtime code against local hard-coded paths.
 - `TASK-0450`, `TASK-0451`, `TASK-0452` implement xong va chuyen sang REVIEW.
+- `TASK-0450`, `TASK-0451`, `TASK-0452` review PASS va chuyen sang DONE.
 - `TASK-0401`, `TASK-0402`, `TASK-0403` implement xong va chuyen sang REVIEW; backend unpack/analyze workflow foundation build command qua runner interface, tests dung fake runner va chua repack/apply/flash.
 - `TASK-0401`, `TASK-0402`, `TASK-0403` review PASS va chuyen sang DONE.
 - `TASK-0410`, `TASK-0411`, `TASK-0501`, `TASK-0502`, `TASK-0503` implement xong va chuyen sang REVIEW; GUI Unpack da noi backend unpack/analyze va lpunpack workflow qua runner interface.

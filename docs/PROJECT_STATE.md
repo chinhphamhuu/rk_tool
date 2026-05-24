@@ -323,7 +323,8 @@
 
 ## Bundled tools normalization
 
-- `TASK-0450`, `TASK-0451`, `TASK-0452` da implement xong va chuyen sang REVIEW.
+- `TASK-0450`, `TASK-0451`, `TASK-0452` da review PASS va DONE.
+- Tools normalization da hoan tat o muc code/docs/scripts.
 - App folder hien tai la `G:\codex\rockchip_tool_updated_structure`.
 - Source tool folder nguoi dung co san la `G:\codex\tools`.
 - Runtime app chi dung `APP_ROOT/tools` thong qua `core/app_paths.py` va `core/tool_config.py`.
@@ -332,3 +333,4 @@
 - `simg2img` duoc lay tu local WSL PATH `/usr/bin/simg2img` vi source tools folder khong co file nay.
 - `scripts/check_tools.sh` kiem tra layout chuan trong app-local `tools/`.
 - `tools/README.md` ghi ro fakebin/stub chi dung cho detect/test, khong dung ROM that.
+- Tinh trang tool that `OK`/`MISSING` phu thuoc ket qua local cua `bash scripts/check_tools.sh`.

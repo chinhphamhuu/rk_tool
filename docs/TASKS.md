@@ -847,7 +847,7 @@ Implementation notes:
 ## Phase 6 - Bundled tools normalization
 
 ### TASK-0450 - Normalize existing tools from external source folder into APP_ROOT/tools
-Status: REVIEW
+Status: DONE
 
 Scope:
 - Add a normalize script that copies existing local tools into the app-local `tools/` layout.
@@ -867,8 +867,16 @@ Implementation notes:
 - `simg2img` was found from local WSL PATH at `/usr/bin/simg2img` when absent from the provided source folder.
 - No runtime code hard-codes the external source folder.
 
+Reviewer notes:
+- PASS: `normalize_existing_tools.sh` tu detect `APP_ROOT` theo vi tri script.
+- PASS: Source tools folder duoc truyen bang argument, vi du `/mnt/g/codex/tools`.
+- PASS: Runtime code khong hard-code `G:\codex` hoac `/mnt/g/codex`.
+- PASS: Tool target layout dung `APP_ROOT/tools`.
+- PASS: Khong xoa source tools folder cu.
+- Non-blocker: README co vi du `/mnt/g/codex/tools` la source folder local, khong phai runtime path.
+
 ### TASK-0451 - Validate bundled tool detection from standardized paths
-Status: REVIEW
+Status: DONE
 
 Scope:
 - Validate `core/tool_config.py` standard tool paths under `AppPaths.tools_dir`.
@@ -886,8 +894,14 @@ Implementation notes:
 - Added `tests/test_tools_layout.py`.
 - Existing `tests/test_tool_config.py` remains compatible with the standardized paths.
 
+Reviewer notes:
+- PASS: `tool_config.py` dung `AppPaths.tools_dir` va path tuong doi chuan.
+- PASS: Tests guard runtime files khong hard-code local path.
+- PASS: Runtime code khong hard-code `G:\codex` hoac `/mnt/g/codex`.
+- Non-blocker: ToolConfig hien chi check file ton tai; check executable dang nam o `scripts/check_tools.sh`. Sau nay co the them `NOT_EXECUTABLE` vao ToolConfig neu muon GUI bao ky hon.
+
 ### TASK-0452 - Add tool check/normalize scripts and README
-Status: REVIEW
+Status: DONE
 
 Scope:
 - Add a standalone check script for current app-local tool status.
@@ -902,3 +916,9 @@ Acceptance:
 Implementation notes:
 - Added `scripts/check_tools.sh`.
 - Updated `tools/README.md`.
+
+Reviewer notes:
+- PASS: `check_tools.sh` check `OK`/`MISSING`/`NOT_FILE`/`NOT_EXECUTABLE`.
+- PASS: fakebin/stub duoc ghi ro khong dung ROM that.
+- PASS: README ghi runtime chi dung `APP_ROOT/tools`.
+- Non-blocker: README co vi du `/mnt/g/codex/tools` la source folder local, khong phai runtime path.
