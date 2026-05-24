@@ -20,6 +20,7 @@
 - `TASK-0103` implement xong và chuyển sang REVIEW; chỉ xử lý path conversion/quoting, không gọi WSL/subprocess/tool thật.
 - `TASK-0103` review portable path conversion PASS và chuyển sang DONE.
 - `TASK-0104` implement xong và chuyển sang REVIEW; chỉ xử lý RKFW header/MD5 tail bằng Python thuần, không gọi WSL/subprocess/tool thật.
+- `TASK-0104` review PASS và chuyển sang DONE; ghi nhận non-blocker cho validate MD5 tail hex và guard output trùng repacked ở task sau.
 
 ### Added
 

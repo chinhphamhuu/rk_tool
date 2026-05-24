@@ -12,9 +12,24 @@
 - Tab Unpack chuyển thành Partition Explorer.
 - Tab Repack đổi thành `Repack & Verify`, tự verify offline sau khi repack.
 
-`TASK-0001` đã review PASS và DONE. `TASK-0101` đã review PASS và DONE. `TASK-0101B` đã review PASS và DONE. `TASK-0102` đã review PASS và DONE. `TASK-0103` đã review PASS và DONE. `TASK-0104 — Implement core/rkfw.py RKFW header and MD5 tail utilities` đã implement xong và đang ở REVIEW. `TASK-0200` đã review PASS và DONE.
+`TASK-0001` đã review PASS và DONE. `TASK-0101` đã review PASS và DONE. `TASK-0101B` đã review PASS và DONE. `TASK-0102` đã review PASS và DONE. `TASK-0103` đã review PASS và DONE. `TASK-0104` đã review PASS và DONE. `TASK-0200` đã review PASS và DONE.
 
 ## Review mới nhất
+
+`TASK-0104 — Implement core/rkfw.py RKFW header and MD5 tail utilities`:
+
+- PASS: `read_rkfw_header()` đọc đúng 4 byte tại offset `0x15`.
+- PASS: `copy_rkfw_header()` copy header từ ROM gốc sang target.
+- PASS: `read_md5_tail()` đọc 32 byte ASCII MD5 tail cuối file.
+- PASS: `compute_body_md5()` tính MD5 body trừ 32 byte cuối bằng chunk, không load toàn bộ file vào RAM.
+- PASS: `verify_md5_tail()` so sánh body MD5 với tail.
+- PASS: `rewrite_md5_tail()` ghi lại MD5 tail đúng.
+- PASS: `fix_header_and_md5_tail()` copy repacked sang output, restore header gốc, tính lại MD5 tail và trả result.
+- PASS: File quá nhỏ raise `RkfwImageError` rõ ràng.
+- PASS: Không gọi WSL, subprocess, `afptool-rs`, không sửa GUI và không dùng ROM tool thật.
+- PASS: Tests pass: `tests/test_rkfw_md5.py`, `compileall`, smoke test và full pytest.
+- Non-blocker: Có thể thêm validate MD5 tail là 32 ký tự hex ở task sau.
+- Non-blocker: Có thể thêm guard nếu `output_path` trùng `repacked_path` ở task sau.
 
 `TASK-0001 — Update repo structure after UX change`:
 
@@ -145,6 +160,5 @@
 
 ## Task tiếp theo đề xuất
 
-1. Review `TASK-0104 — core/rkfw.py`.
-2. Nếu review PASS, chuyển `TASK-0104` sang DONE.
-3. Implement backend wiring cho Project/Unpack sau khi core foundation tiếp tục ổn định.
+1. Implement backend wiring cho Project/Unpack sau khi core foundation tiếp tục ổn định.
+2. Review task tiếp theo theo `docs/REVIEW_CHECKLIST.md` khi có implementation mới.

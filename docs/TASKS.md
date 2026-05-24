@@ -147,7 +147,7 @@ Reviewer notes:
 - PASS: Tests pass: `tests/test_path_utils.py`, `compileall`, smoke test and full pytest.
 
 ### TASK-0104 — Implement `core/rkfw.py` RKFW header and MD5 tail utilities
-Status: REVIEW
+Status: DONE
 
 Scope:
 - Implement RKFW header and MD5 tail helpers in `core/rkfw.py`.
@@ -176,6 +176,20 @@ Implementation notes:
 - Tests cover header read/copy, tail read, body MD5, verify true/false, rewrite tail, fix header+tail and too-small file errors.
 - No WSL, subprocess, GUI or ROM tool calls were added.
 - Tests pass: `tests/test_rkfw_md5.py`, `compileall`, smoke test and full pytest.
+
+Reviewer notes:
+- PASS: `read_rkfw_header()` đọc đúng 4 byte tại offset `0x15`.
+- PASS: `copy_rkfw_header()` copy header từ ROM gốc sang target.
+- PASS: `read_md5_tail()` đọc 32 byte ASCII MD5 tail cuối file.
+- PASS: `compute_body_md5()` tính MD5 body trừ 32 byte cuối bằng chunk, không load toàn bộ file vào RAM.
+- PASS: `verify_md5_tail()` so sánh body MD5 với tail.
+- PASS: `rewrite_md5_tail()` ghi lại MD5 tail đúng.
+- PASS: `fix_header_and_md5_tail()` copy repacked sang output, restore header gốc, tính lại MD5 tail và trả result.
+- PASS: File quá nhỏ raise `RkfwImageError` rõ ràng.
+- PASS: Không gọi WSL, subprocess, `afptool-rs`, không sửa GUI và không dùng ROM tool thật.
+- PASS: Tests pass: `tests/test_rkfw_md5.py`, `compileall`, smoke test và full pytest.
+- Non-blocker: Có thể thêm validate MD5 tail là 32 ký tự hex ở task sau.
+- Non-blocker: Có thể thêm guard nếu `output_path` trùng `repacked_path` ở task sau.
 
 ## Phase 2 — Project & Unpack GUI
 
