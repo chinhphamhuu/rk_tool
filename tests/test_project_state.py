@@ -8,6 +8,7 @@ from core.partition_explorer import build_partition_explorer
 from core.project_state import (
     ProjectStateError,
     create_project_state,
+    get_partition_editable_dir,
     get_partition_source_image,
     load_project_state,
     mark_partition_extracted,
@@ -110,6 +111,8 @@ def test_mark_partition_extracted(tmp_path):
     product = {partition.name: partition for partition in state.dynamic_partitions}["product_a"]
     assert product.extracted is True
     assert product.editable_dir == str(editable_dir)
+    assert state.editable_partitions["product_a"] == str(editable_dir)
+    assert get_partition_editable_dir(state, "product_a") == editable_dir
 
 
 def test_mark_partition_modified(tmp_path):
@@ -150,6 +153,20 @@ def test_lpunpack_state_save_load_and_source_mapping(tmp_path):
         "system_a": str(system_img),
     }
     assert get_partition_source_image(loaded, "product_a") == product_img
+
+
+def test_editable_partition_mapping_save_load(tmp_path):
+    state = _make_state(tmp_path)
+    editable_dir = Path(state.editable_dir) / "system_a"
+
+    mark_partition_extracted(state, "system_a", editable_dir)
+    state_file = tmp_path / "state.json"
+    save_project_state(state, state_file)
+    loaded = load_project_state(state_file)
+
+    assert loaded.editable_partitions["system_a"] == str(editable_dir)
+    assert loaded.extracted_partitions["system_a"] == str(editable_dir)
+    assert get_partition_editable_dir(loaded, "system_a") == editable_dir
 
 
 def test_missing_state_file_raises_clear_error(tmp_path):

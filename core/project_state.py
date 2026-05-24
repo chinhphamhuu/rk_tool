@@ -70,6 +70,7 @@ class ProjectState:
     parts_dir: str | None = None
     raw_super_img_path: str | None = None
     extracted_partition_images: dict[str, str] = field(default_factory=dict)
+    editable_partitions: dict[str, str] = field(default_factory=dict)
     detected_images: list[ProjectDetectedImage] = field(default_factory=list)
     dynamic_partitions: list[ProjectDynamicPartition] = field(default_factory=list)
     avb_summary: ProjectAvbSummary | None = None
@@ -178,6 +179,7 @@ def mark_partition_extracted(
     editable_dir: str | Path,
 ) -> ProjectState:
     editable_path = str(editable_dir)
+    state.editable_partitions[partition_name] = editable_path
     state.extracted_partitions[partition_name] = editable_path
     for partition in state.dynamic_partitions:
         if partition.name == partition_name:
@@ -228,6 +230,17 @@ def get_partition_source_image(state: ProjectState, partition_name: str) -> Path
     return Path(state.work_dir) / "parts" / f"{partition_name}.img"
 
 
+def get_partition_editable_dir(state: ProjectState, partition_name: str) -> Path:
+    if partition_name in state.editable_partitions:
+        return Path(state.editable_partitions[partition_name])
+    if partition_name in state.extracted_partitions:
+        return Path(state.extracted_partitions[partition_name])
+    for partition in state.dynamic_partitions:
+        if partition.name == partition_name and partition.editable_dir:
+            return Path(partition.editable_dir)
+    return Path(state.editable_dir) / partition_name
+
+
 def _state_to_dict(state: ProjectState) -> dict[str, Any]:
     return asdict(state)
 
@@ -246,6 +259,9 @@ def _state_from_dict(data: dict[str, Any]) -> ProjectState:
         parts_dir=data.get("parts_dir"),
         raw_super_img_path=data.get("raw_super_img_path"),
         extracted_partition_images=dict(data.get("extracted_partition_images", {})),
+        editable_partitions=dict(
+            data.get("editable_partitions", data.get("extracted_partitions", {}))
+        ),
         detected_images=[
             ProjectDetectedImage(**image) for image in data.get("detected_images", [])
         ],

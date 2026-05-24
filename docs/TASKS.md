@@ -922,3 +922,90 @@ Reviewer notes:
 - PASS: fakebin/stub duoc ghi ro khong dung ROM that.
 - PASS: README ghi runtime chi dung `APP_ROOT/tools`.
 - Non-blocker: README co vi du `/mnt/g/codex/tools` la source folder local, khong phai runtime path.
+
+## Phase 7 - Editable folder extraction
+
+### TASK-0510 - Implement ext4 image inspection foundation
+Status: REVIEW
+
+Scope:
+- Add `core/ext4_image.py`.
+- Build read-only ext4 inspection/extract commands for runner-based workflows.
+- Parse `dumpe2fs -h` report text.
+- Do not call WSL/subprocess directly.
+
+Acceptance:
+- Builds `debugfs -R "rdump / <editable_dir>" <image>`.
+- Builds `e2fsck -fn <image>`.
+- Builds `dumpe2fs -h <image>`.
+- Quotes paths with spaces and preserves Unicode paths.
+- Parses block count, free blocks, block size, volume name and filesystem features from `dumpe2fs` output.
+- Empty/invalid parse raises `Ext4ImageError` clearly.
+- `tests/test_ext4_image.py` pass.
+
+Implementation notes:
+- Added `Ext4ImageInfo` and `Ext4ImageError`.
+- Helpers only build commands and parse report text; they do not run tools.
+
+### TASK-0511 - Implement extract partition image to editable folder workflow
+Status: REVIEW
+
+Scope:
+- Add `core/editable_extractor.py`.
+- Extract `parts/<partition>.img` into `editable/<partition>/` using read-only `debugfs rdump`.
+- Write e2fsck/dumpe2fs reports and editable manifest.
+
+Acceptance:
+- Validates source image and partition name.
+- Checks `debugfs`, `e2fsck`, and `dumpe2fs` through runner using `command -v`.
+- Runs `e2fsck -fn` and saves `reports/e2fsck_<partition>.txt`.
+- Runs `dumpe2fs -h` and saves `reports/dumpe2fs_<partition>.txt`.
+- Runs `debugfs rdump` through runner only.
+- Writes `editable/<partition>/.rk_manifest.json`.
+- Existing non-empty editable folder raises unless `overwrite=True`.
+- Tests use fake runner and do not require WSL or real ext4 images.
+- `tests/test_editable_extractor.py` pass.
+
+Implementation notes:
+- Added `EditableExtractResult` and `EditableExtractError`.
+- No sudo, loop mount, apply diff, resize, rebuild, repack or flash logic was added.
+
+### TASK-0512 - Wire Edit ROM Folder tab to extracted editable folders
+Status: REVIEW
+
+Scope:
+- Connect `gui/edit_rom_tab.py` to project state and editable extraction workflow.
+- Keep GUI subprocess-free.
+- Display technical partition status only.
+
+Acceptance:
+- Missing project logs/shows a clear message and does not crash.
+- Missing partition images logs/shows a clear message and does not crash.
+- Tab lists partitions from `project_state` with source image, editable folder, size, status and action text.
+- Extract selected calls backend workflow/service, saves state and refreshes rows.
+- Open selected folder logs the editable path without direct subprocess.
+- No risk wording such as dangerous/safe/bootloop is shown in this flow.
+- `tests/test_gui_edit_rom_flow.py` pass.
+
+Implementation notes:
+- Added testable helpers `list_editable_partition_rows()` and `extract_editable_partition_backend()`.
+- MainWindow now forwards current project state to Edit ROM Folder tab.
+
+### TASK-0513 - Update project state after editable extraction
+Status: REVIEW
+
+Scope:
+- Persist editable partition dirs after extraction.
+- Keep existing lpunpack/source-image state intact.
+
+Acceptance:
+- `ProjectState` stores `editable_partitions`.
+- `mark_partition_extracted()` updates both `extracted_partitions` and `editable_partitions`.
+- Dynamic partition `editable_dir` is updated after extraction.
+- `get_partition_editable_dir()` returns the recorded editable dir or default path.
+- Save/load JSON preserves Unicode and old state defaults.
+- `tests/test_project_state.py` pass.
+
+Implementation notes:
+- `modified_partitions` is not changed by editable extraction.
+- `get_partition_source_image()` still prefers modified images, then lpunpack parts images, then default `work/parts`.

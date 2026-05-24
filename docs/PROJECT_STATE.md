@@ -334,3 +334,15 @@
 - `scripts/check_tools.sh` kiem tra layout chuan trong app-local `tools/`.
 - `tools/README.md` ghi ro fakebin/stub chi dung cho detect/test, khong dung ROM that.
 - Tinh trang tool that `OK`/`MISSING` phu thuoc ket qua local cua `bash scripts/check_tools.sh`.
+
+## Editable folder extraction foundation
+
+- `TASK-0510`, `TASK-0511`, `TASK-0512`, `TASK-0513` da implement xong va chuyen sang REVIEW.
+- App da co foundation extract partition image ra `editable/<partition>/`.
+- Extract dung `debugfs rdump` read-only qua runner/WslRunner interface.
+- Workflow tao `e2fsck -fn` report trong `work/reports/e2fsck_<partition>.txt`.
+- Workflow tao `dumpe2fs -h` report trong `work/reports/dumpe2fs_<partition>.txt`.
+- Workflow ghi manifest tai `editable/<partition>/.rk_manifest.json`.
+- Edit ROM Folder tab doc project_state, hien partition source image/editable folder/status va goi extract selected qua service.
+- Project state luu `editable_partitions` va cap nhat `dynamic_partitions[].editable_dir`.
+- Chua apply thay doi nguoc vao image, chua debugfs write, chua resize, chua rebuild super, chua repack final va chua flash.

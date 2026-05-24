@@ -49,14 +49,16 @@ class MainWindow(QMainWindow):
 
         self.project_tab = ProjectTab(paths)
         self.unpack_tab = UnpackTab(paths)
+        self.edit_rom_tab = EditRomTab()
         self.project_tab.project_created.connect(self._set_project_state)
         self.project_tab.project_loaded.connect(self._set_project_state)
         self.unpack_tab.project_state_updated.connect(self._set_project_state)
+        self.edit_rom_tab.project_state_updated.connect(self._set_project_state)
 
         self.stack.addWidget(self.project_tab)
         self.stack.addWidget(self.unpack_tab)
         self.stack.addWidget(AnalyzeTab())
-        self.stack.addWidget(EditRomTab())
+        self.stack.addWidget(self.edit_rom_tab)
         self.stack.addWidget(ApplyChangesTab())
         self.stack.addWidget(RebuildSuperTab())
         self.stack.addWidget(RepackVerifyTab())
@@ -88,4 +90,5 @@ class MainWindow(QMainWindow):
         self.current_project_state = state
         self.current_project_state_path = state_path
         self.unpack_tab.set_project_state(state, state_path)
+        self.edit_rom_tab.set_project_state(state, state_path)
         self.workspace_label.setText(f"●  Project: {state.project_name}")

@@ -11,6 +11,7 @@
 - Added `tests/test_tools_layout.py` to validate standardized tool paths and guard runtime code against local hard-coded paths.
 - `TASK-0450`, `TASK-0451`, `TASK-0452` implement xong va chuyen sang REVIEW.
 - `TASK-0450`, `TASK-0451`, `TASK-0452` review PASS va chuyen sang DONE.
+- `TASK-0510`, `TASK-0511`, `TASK-0512`, `TASK-0513` implement xong va chuyen sang REVIEW; editable extraction dung debugfs rdump read-only qua runner.
 - `TASK-0401`, `TASK-0402`, `TASK-0403` implement xong va chuyen sang REVIEW; backend unpack/analyze workflow foundation build command qua runner interface, tests dung fake runner va chua repack/apply/flash.
 - `TASK-0401`, `TASK-0402`, `TASK-0403` review PASS va chuyen sang DONE.
 - `TASK-0410`, `TASK-0411`, `TASK-0501`, `TASK-0502`, `TASK-0503` implement xong va chuyen sang REVIEW; GUI Unpack da noi backend unpack/analyze va lpunpack workflow qua runner interface.
@@ -55,6 +56,11 @@
 - `extract_dynamic_partitions()` lpunpack workflow trong `core/super_image.py`.
 - Project state fields cho `parts_dir`, `raw_super_img_path`, `extracted_partition_images`.
 - `tests/test_super_image_lpunpack.py` va `tests/test_gui_unpack_backend_flow.py`.
+- `core/ext4_image.py` ext4 inspection command helpers va `dumpe2fs` parser.
+- `core/editable_extractor.py` editable extraction workflow voi e2fsck/dumpe2fs reports va `.rk_manifest.json`.
+- Edit ROM Folder tab extraction flow ket noi project state va editable extraction service.
+- Project state field `editable_partitions` va helper `get_partition_editable_dir()`.
+- `tests/test_ext4_image.py`, `tests/test_editable_extractor.py`, `tests/test_gui_edit_rom_flow.py`.
 
 - `docs/TECHNICAL_KNOWLEDGE_BASE.md`.
 - `docs/COMMANDS_REFERENCE.md`.
