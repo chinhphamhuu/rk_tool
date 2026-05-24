@@ -12,9 +12,25 @@
 - Tab Unpack chuyển thành Partition Explorer.
 - Tab Repack đổi thành `Repack & Verify`, tự verify offline sau khi repack.
 
-`TASK-0001` đã review PASS và DONE. `TASK-0101` đã review PASS và DONE. `TASK-0101B` đã review PASS và DONE. `TASK-0102` đã review PASS và DONE. `TASK-0103` đã review PASS và DONE. `TASK-0104` đã review PASS và DONE. `TASK-0200` đã review PASS và DONE. `TASK-0203` đã review PASS và DONE. `TASK-0204 — Implement core/avb.py AVB/vbmeta info parser` đã implement xong và đang ở REVIEW.
+`TASK-0001` đã review PASS và DONE. `TASK-0101` đã review PASS và DONE. `TASK-0101B` đã review PASS và DONE. `TASK-0102` đã review PASS và DONE. `TASK-0103` đã review PASS và DONE. `TASK-0104` đã review PASS và DONE. `TASK-0200` đã review PASS và DONE. `TASK-0203` đã review PASS và DONE. `TASK-0204` đã review PASS và DONE.
 
 ## Review mới nhất
+
+`TASK-0204 — Implement core/avb.py AVB/vbmeta info parser`:
+
+- PASS: `core/avb.py` chỉ parse text report từ `avbtool info_image` output.
+- PASS: Không gọi WSL, subprocess, `avbtool.py` thật, không đọc binary `vbmeta.img` thật và không sửa GUI.
+- PASS: Có `AvbInfo`, `AvbDescriptor`, `AvbParseError`.
+- PASS: Có `parse_avb_info_text(text)`, `load_avb_info_report(path)` và `classify_avb_risk(info)`.
+- PASS: Parse được `Algorithm`, `Flags`, `Rollback Index`, Hash descriptor và Hashtree descriptor.
+- PASS: Parse được descriptor metadata: `Partition Name`, `Image Size`, `Salt`, `Digest`/`Root Digest`.
+- PASS: Detect Hash/Hashtree descriptors; `affected_partitions` không duplicate và không hard-code chỉ `system/product/vendor`.
+- PASS: No-descriptor vbmeta với `Algorithm: NONE` + `Flags: 2` classify risk `low`; Hash/Hashtree descriptor classify risk `danger`.
+- PASS: Empty/unrecognized text raise `AvbParseError` rõ ràng.
+- PASS: Tests pass: `tests/test_avb.py`, `compileall`, smoke test và full pytest.
+- Non-blocker: Workflow chạy `avbtool.py` thật phải làm ở task sau và đi qua `WslRunner`.
+- Non-blocker: GUI Analyze tab sau này phải hiện cảnh báo đỏ nếu có Hash/Hashtree descriptor.
+- Non-blocker: Không được kết luận chắc chắn AVB đã tắt, chỉ dùng wording `likely disabled` / `requires attention`.
 
 `TASK-0203 — Image detector core`:
 
@@ -192,6 +208,5 @@
 
 ## Task tiếp theo đề xuất
 
-1. Review `TASK-0204 — core/avb.py`.
-2. Nếu review PASS, chuyển `TASK-0204` sang DONE.
-3. Implement backend wiring cho Project/Unpack sau khi core foundation tiếp tục ổn định.
+1. Implement backend wiring cho Project/Unpack sau khi core foundation tiếp tục ổn định.
+2. Review task tiếp theo theo `docs/REVIEW_CHECKLIST.md` khi có implementation mới.

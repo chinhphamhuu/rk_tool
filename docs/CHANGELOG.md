@@ -24,6 +24,7 @@
 - `TASK-0203` implement xong và chuyển sang REVIEW; image detector chỉ scan filesystem bằng Python thuần, không gọi WSL/subprocess/tool thật.
 - `TASK-0203` review PASS và chuyển sang DONE; ghi nhận non-blocker thêm cảnh báo riêng khi sửa/rebuild `super.img` ở task sau.
 - `TASK-0204` implement xong và chuyển sang REVIEW; AVB/vbmeta parser chỉ parse text report mẫu, không gọi WSL/subprocess/tool thật.
+- `TASK-0204` review PASS và chuyển sang DONE; ghi nhận non-blocker workflow chạy avbtool thật phải qua `WslRunner` và GUI Analyze phải cảnh báo đỏ khi có Hash/Hashtree descriptor.
 
 ### Added
 

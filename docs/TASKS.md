@@ -277,7 +277,7 @@ Reviewer notes:
 - Non-blocker: `super.img` risk `safe` chấp nhận được cho analyze/unpack; khi làm rebuild super/lpmake thật cần thêm cảnh báo riêng vì sửa `super.img` vẫn có rủi ro.
 
 ### TASK-0204 — Implement `core/avb.py` AVB/vbmeta info parser
-Status: REVIEW
+Status: DONE
 
 Scope:
 - Implement `core/avb.py`.
@@ -312,3 +312,19 @@ Implementation notes:
 - `affected_partitions` keeps detected partition names without hard-coding system/product/vendor only.
 - Added fixtures `vbmeta_algorithm_none.txt` and `vbmeta_with_descriptors.txt`.
 - Tests pass: `tests/test_avb.py`, `compileall`, smoke test and full pytest.
+
+Reviewer notes:
+- PASS: `core/avb.py` chỉ parse text report từ `avbtool info_image` output.
+- PASS: Không gọi WSL, subprocess, `avbtool.py` thật, không đọc binary `vbmeta.img` thật và không sửa GUI.
+- PASS: Có `AvbInfo`, `AvbDescriptor`, `AvbParseError`.
+- PASS: Có `parse_avb_info_text(text)`, `load_avb_info_report(path)` và `classify_avb_risk(info)`.
+- PASS: Parse được `Algorithm`, `Flags`, `Rollback Index`, Hash descriptor và Hashtree descriptor.
+- PASS: Parse được `Partition Name`, `Image Size`, `Salt`, `Digest`/`Root Digest`.
+- PASS: Detect `has_hash_descriptor`, `has_hashtree_descriptor`; `affected_partitions` không duplicate và không hard-code chỉ `system/product/vendor`.
+- PASS: `Algorithm: NONE` + `Flags: 2` + `Descriptors: none` classify risk `low`.
+- PASS: Có Hash/Hashtree descriptor classify risk `danger`.
+- PASS: Empty/unrecognized text raise `AvbParseError` rõ ràng.
+- PASS: Tests pass: `tests/test_avb.py`, `compileall`, smoke test và full pytest.
+- Non-blocker: Workflow chạy `avbtool.py` thật phải làm ở task sau và đi qua `WslRunner`.
+- Non-blocker: GUI Analyze tab sau này phải hiện cảnh báo đỏ nếu có Hash/Hashtree descriptor.
+- Non-blocker: Không được kết luận chắc chắn AVB đã tắt, chỉ dùng wording `likely disabled` / `requires attention`.
