@@ -21,6 +21,7 @@
 - `TASK-0103` review portable path conversion PASS và chuyển sang DONE.
 - `TASK-0104` implement xong và chuyển sang REVIEW; chỉ xử lý RKFW header/MD5 tail bằng Python thuần, không gọi WSL/subprocess/tool thật.
 - `TASK-0104` review PASS và chuyển sang DONE; ghi nhận non-blocker cho validate MD5 tail hex và guard output trùng repacked ở task sau.
+- `TASK-0203` implement xong và chuyển sang REVIEW; image detector chỉ scan filesystem bằng Python thuần, không gọi WSL/subprocess/tool thật.
 
 ### Added
 
@@ -44,3 +45,5 @@
 - `tests/test_path_utils.py` bổ sung coverage cho drive E và UNC network path NAS/IP.
 - `core/rkfw.py` với helpers đọc/copy header RKFW tại offset `0x15`, đọc/tính/verify/ghi MD5 tail 32 byte và fix header+tail final.
 - `tests/test_rkfw_md5.py` coverage cho header, MD5 tail, verify true/false, rewrite tail, fix header+tail và lỗi file quá nhỏ.
+- `core/image_detector.py` với `scan_image_dir()`/`detect_images()` và metadata cho image trong RKAF `Image/`.
+- `tests/test_image_detector.py` coverage cho known images, unknown `.img`, empty folder và no WSL/subprocess/tool calls.

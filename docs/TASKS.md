@@ -230,4 +230,34 @@ Status: TODO
 Status: TODO
 
 ### TASK-0203 — Image detector core
-Status: TODO
+Status: REVIEW
+
+Scope:
+- Implement `core/image_detector.py`.
+- Scan unpacked RKAF `Image/` folder using Python filesystem APIs only.
+- Detect known Rockchip/Android image files and unknown `.img` files.
+- Do not call WSL, subprocess or ROM tools.
+- Do not modify GUI.
+
+Acceptance:
+- Detect `super.img` as `dynamic_super` with actions `analyze`, `unpack`.
+- Detect `vbmeta.img` as `avb_vbmeta` with action `analyze_avb`.
+- Detect `boot.img` and `recovery.img` as analyze-only boot/recovery images.
+- Detect `dtbo.img` as info-only.
+- Detect `uboot.img` and `trust.img` as `bootloader_danger`, risk `danger`, info-only.
+- Detect `misc.img` and `parameter.txt`.
+- Detect unknown `.img` files as `unknown_image`.
+- Empty `Image/` folder returns an empty list.
+- No WSL, subprocess or ROM tool calls.
+- `tests/test_image_detector.py` pass.
+- `python -m compileall .` pass.
+- `python app.py --smoke-test` pass.
+- `python -m pytest` pass.
+
+Implementation notes:
+- Added `DetectedImage`, `ImageKind`, `ImageDetectorError`, `scan_image_dir()` and `detect_images()`.
+- Returned metadata includes `name`, `path`, `size_bytes`, `type`, `risk_level` and `supported_actions`.
+- Known files are sorted in Partition Explorer order; unknown `.img` files follow alphabetically.
+- Non-image unrelated files are ignored.
+- Tests use `tmp_path` and fake files only.
+- Tests pass: `tests/test_image_detector.py`, `compileall`, smoke test and full pytest.
