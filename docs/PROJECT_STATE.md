@@ -12,9 +12,27 @@
 - Tab Unpack chuyển thành Partition Explorer.
 - Tab Repack đổi thành `Repack & Verify`, tự verify offline sau khi repack.
 
-`TASK-0001` đã review PASS và DONE. `TASK-0101` đã review PASS và DONE. `TASK-0101B` đã review PASS và DONE. `TASK-0102` đã review PASS và DONE. `TASK-0103` đã review PASS và DONE. `TASK-0104` đã review PASS và DONE. `TASK-0200` đã review PASS và DONE. `TASK-0203` đã review PASS và DONE. `TASK-0204` đã review PASS và DONE. `TASK-0205`, `TASK-0206` và `TASK-0207` đã review PASS và DONE. `TASK-0208` và `TASK-0209` đã implement xong và đang ở REVIEW.
+`TASK-0001` đã review PASS và DONE. `TASK-0101` đã review PASS và DONE. `TASK-0101B` đã review PASS và DONE. `TASK-0102` đã review PASS và DONE. `TASK-0103` đã review PASS và DONE. `TASK-0104` đã review PASS và DONE. `TASK-0200` đã review PASS và DONE. `TASK-0203` đã review PASS và DONE. `TASK-0204` đã review PASS và DONE. `TASK-0205`, `TASK-0206` và `TASK-0207` đã review PASS và DONE. `TASK-0208` và `TASK-0209` đã review PASS và DONE.
 
 ## Review mới nhất
+
+`TASK-0208/0209 — Partition Explorer state foundation`:
+
+- PASS: `core/partition_explorer.py` gom detected images từ `Image/`, sparse/raw status, optional AVB summary và optional dynamic partitions.
+- PASS: Có `PartitionExplorerResult`, `PartitionImageNode`, `DynamicPartitionNode`, `AvbSummary`, `PartitionExplorerError`.
+- PASS: Dùng lại `image_detector`, `sparse_image`, `avb.py`, `lpdump_parser.py`; không chạy tool thật.
+- PASS: Có image groups `super_images`, `vbmeta_images`, `boot_images`, `danger_images`.
+- PASS: Empty `Image/` folder trả result hợp lệ với warning; missing `image_dir` raise `PartitionExplorerError`.
+- PASS: AVB Hash/Hashtree descriptor tạo warning bootloop/AVB.
+- PASS: Dynamic partitions giữ nguyên tên A/B, non-A/B và partition lạ; partition risk không claim safe tuyệt đối.
+- PASS: `core/project_state.py` lưu JSON UTF-8, giữ Unicode, có schema version và timestamps.
+- PASS: Có create/save/load/update/mark extracted/mark modified/get source image APIs.
+- PASS: Missing/invalid state file raise `ProjectStateError`.
+- PASS: Không hard-code workspace absolute path, không gọi WSL/subprocess/tool thật và không sửa GUI.
+- PASS: Tests pass: `test_partition_explorer.py`, `test_project_state.py`, `compileall`, smoke test và full pytest.
+- Non-blocker: Sau này nên thống nhất `image_dir` thật là `project_dir/work/update/Image` hoặc truyền rõ khi tạo project.
+- Non-blocker: `_infer_source_image_path()` tạm ổn, nhưng workflow thật nên truyền source image root rõ hơn.
+- Non-blocker: Task sau mới chạy `avbtool`/`lpdump` thật qua `WslRunner` để tạo report.
 
 `TASK-0205/0206/0207 — super.img metadata foundation`:
 
@@ -246,6 +264,5 @@
 
 ## Task tiếp theo đề xuất
 
-1. Review `TASK-0208/0209 — Partition Explorer state foundation` theo checklist.
-2. Nếu review PASS, chuyển `TASK-0208` và `TASK-0209` sang DONE.
-3. Implement backend wiring cho Project/Unpack sau khi core foundation tiếp tục ổn định.
+1. Implement backend wiring cho Project/Unpack sau khi core foundation tiếp tục ổn định.
+2. Review task tiếp theo theo `docs/REVIEW_CHECKLIST.md` khi có implementation mới.

@@ -28,6 +28,7 @@
 - `TASK-0205`, `TASK-0206`, `TASK-0207` implement xong và chuyển sang REVIEW; super.img metadata foundation chỉ detect/parse/build preview, chưa chạy tool thật.
 - `TASK-0205`, `TASK-0206`, `TASK-0207` review PASS và chuyển sang DONE; ghi nhận non-blocker cần bổ sung fixture khi gặp `lpdump` thực tế khác, verify command với binary `lpmake` thật, và lấy `size_override` từ resize planner/ext4 image.
 - `TASK-0208`, `TASK-0209` implement xong và chuyển sang REVIEW; Partition Explorer state foundation chỉ gom filesystem/report state, chưa chạy tool thật.
+- `TASK-0208`, `TASK-0209` review PASS và chuyển sang DONE; ghi nhận non-blocker cần chuẩn hóa `image_dir`, truyền source image root rõ hơn và chạy `avbtool`/`lpdump` thật qua `WslRunner` ở task sau.
 
 ### Added
 

@@ -447,7 +447,7 @@ Reviewer notes:
 - Non-blocker: Future `size_override` values must come from `resize_planner`/`ext4_image`, not manual input.
 
 ### TASK-0208 — Implement `core/partition_explorer.py`
-Status: REVIEW
+Status: DONE
 
 Scope:
 - Build Partition Explorer core state for the Unpack tab.
@@ -479,8 +479,25 @@ Implementation notes:
 - No WSL, subprocess, GUI or ROM tool calls were added.
 - Tests pass: `tests/test_partition_explorer.py`.
 
+Reviewer notes:
+- PASS: `core/partition_explorer.py` gathers detected images from `Image/`.
+- PASS: Provides `PartitionExplorerResult`, `PartitionImageNode`, `DynamicPartitionNode`, `AvbSummary`, and `PartitionExplorerError`.
+- PASS: Uses `image_detector` for scanning instead of duplicating image detection logic.
+- PASS: Uses `sparse_image` to mark `super.img` sparse/raw without running `simg2img`.
+- PASS: Uses `avb.py` to parse optional vbmeta text reports.
+- PASS: Uses `lpdump_parser.py` to parse optional dynamic partition reports.
+- PASS: Provides image groups: `super_images`, `vbmeta_images`, `boot_images`, and `danger_images`.
+- PASS: Empty `Image/` folder returns a valid result with warning; missing `image_dir` raises `PartitionExplorerError`.
+- PASS: AVB Hash/Hashtree descriptors create bootloop/AVB warnings.
+- PASS: Dynamic partitions preserve A/B, non-A/B, and unknown partition names.
+- PASS: Partition risk does not claim absolute safety.
+- PASS: Does not call WSL, subprocess, `afptool`, `simg2img`, `lpdump`, `lpunpack`, `lpmake`, `avbtool`, or any real ROM tool.
+- PASS: Does not modify GUI.
+- PASS: Tests pass: `tests/test_partition_explorer.py`, `compileall`, smoke test, and full pytest.
+- Non-blocker: Real workflow should pass source image roots explicitly instead of relying on `_infer_source_image_path()`.
+
 ### TASK-0209 — Improve `core/project_state.py` for detected images and partition explorer state
-Status: REVIEW
+Status: DONE
 
 Scope:
 - Persist project and Partition Explorer state to JSON.
@@ -509,3 +526,17 @@ Implementation notes:
 - State keeps `schema_version`, `created_at` and `updated_at`.
 - No WSL, subprocess, GUI or ROM tool calls were added.
 - Tests pass: `tests/test_project_state.py`.
+
+Reviewer notes:
+- PASS: `core/project_state.py` persists project state as UTF-8 JSON.
+- PASS: Provides `ProjectState`, `ProjectDetectedImage`, `ProjectDynamicPartition`, `ProjectAvbSummary`, and `ProjectStateError`.
+- PASS: Provides `create_project_state()`, `save_project_state()`, `load_project_state()`, `update_partition_explorer_state()`, `mark_partition_extracted()`, `mark_partition_modified()`, and `get_partition_source_image()`.
+- PASS: Preserves Vietnamese Unicode in project names and paths.
+- PASS: Keeps `schema_version`, `created_at`, and `updated_at`.
+- PASS: Missing/invalid state files raise `ProjectStateError` clearly.
+- PASS: Does not hard-code workspace absolute paths.
+- PASS: Does not call WSL, subprocess, or any real ROM tool.
+- PASS: Does not modify GUI.
+- PASS: Tests pass: `tests/test_project_state.py`, `compileall`, smoke test, and full pytest.
+- Non-blocker: Future project creation should standardize the real `image_dir` as `project_dir/work/update/Image` or pass it explicitly.
+- Non-blocker: Real workflow should generate AVB/lpdump reports through `WslRunner` in a later task.
