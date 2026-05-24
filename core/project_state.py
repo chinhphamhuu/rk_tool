@@ -67,6 +67,9 @@ class ProjectState:
     output_dir: str
     reports_dir: str
     selected_apk_path: str | None = None
+    parts_dir: str | None = None
+    raw_super_img_path: str | None = None
+    extracted_partition_images: dict[str, str] = field(default_factory=dict)
     detected_images: list[ProjectDetectedImage] = field(default_factory=list)
     dynamic_partitions: list[ProjectDynamicPartition] = field(default_factory=list)
     avb_summary: ProjectAvbSummary | None = None
@@ -99,6 +102,7 @@ def create_project_state(
         output_dir=str(Path(output_dir) if output_dir is not None else base_dir / "output"),
         reports_dir=str(Path(reports_dir) if reports_dir is not None else base_dir / "reports"),
         selected_apk_path=str(selected_apk_path) if selected_apk_path else None,
+        parts_dir=str((Path(work_dir) if work_dir is not None else base_dir / "work") / "parts"),
     )
 
 
@@ -193,10 +197,35 @@ def mark_partition_modified(state: ProjectState, partition_name: str) -> Project
     return state
 
 
+def update_lpunpack_state(
+    state: ProjectState,
+    parts_dir: str | Path,
+    raw_super_img_path: str | Path,
+    extracted_images: list[str | Path] | tuple[str | Path, ...],
+) -> ProjectState:
+    state.parts_dir = str(parts_dir)
+    state.raw_super_img_path = str(raw_super_img_path)
+    for image in extracted_images:
+        image_path = Path(image)
+        if image_path.suffix.lower() != ".img":
+            continue
+        partition_name = image_path.stem
+        state.extracted_partition_images[partition_name] = str(image_path)
+        for partition in state.dynamic_partitions:
+            if partition.name == partition_name:
+                partition.source_image_path = str(image_path)
+    state.updated_at = _utc_now()
+    return state
+
+
 def get_partition_source_image(state: ProjectState, partition_name: str) -> Path:
-    base_dir = Path(state.project_dir)
-    image_root = "modified" if partition_name in state.modified_partitions else "parts"
-    return base_dir / image_root / f"{partition_name}.img"
+    if partition_name in state.modified_partitions:
+        return Path(state.work_dir) / "modified" / f"{partition_name}.img"
+    if partition_name in state.extracted_partition_images:
+        return Path(state.extracted_partition_images[partition_name])
+    if state.parts_dir:
+        return Path(state.parts_dir) / f"{partition_name}.img"
+    return Path(state.work_dir) / "parts" / f"{partition_name}.img"
 
 
 def _state_to_dict(state: ProjectState) -> dict[str, Any]:
@@ -214,6 +243,9 @@ def _state_from_dict(data: dict[str, Any]) -> ProjectState:
         output_dir=data["output_dir"],
         reports_dir=data["reports_dir"],
         selected_apk_path=data.get("selected_apk_path"),
+        parts_dir=data.get("parts_dir"),
+        raw_super_img_path=data.get("raw_super_img_path"),
+        extracted_partition_images=dict(data.get("extracted_partition_images", {})),
         detected_images=[
             ProjectDetectedImage(**image) for image in data.get("detected_images", [])
         ],

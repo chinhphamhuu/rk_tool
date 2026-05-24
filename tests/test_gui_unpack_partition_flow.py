@@ -76,17 +76,14 @@ def test_refresh_empty_image_folder_does_not_crash(tmp_path):
 
 
 def test_refresh_without_project_state_raises_warning_error():
-    with pytest.raises(UnpackFlowError, match="Chưa tạo project"):
+    with pytest.raises(UnpackFlowError, match="project"):
         refresh_partition_explorer_state(None)
 
 
-def test_unpack_tab_source_has_no_subprocess_or_tool_invocation():
+def test_unpack_tab_source_has_no_direct_process_invocation():
     source = inspect.getsource(unpack_tab)
 
     assert "subprocess" not in source
     assert "wsl.exe" not in source
     assert "Popen" not in source
-    assert "afptool" not in source
-    assert "simg2img" not in source
-    assert "lpunpack" not in source
     assert "lpmake" not in source

@@ -751,3 +751,154 @@ Reviewer notes:
 - PASS: Không sửa GUI, không repack, không apply diff, không flash.
 - PASS: Không gọi subprocess trực tiếp ngoài `core/wsl_runner.py`.
 - Non-blocker: Khi có tool thật cần test command với ROM thật và bổ sung fixture nếu output khác.
+## Phase 5 - GUI real unpack/analyze and lpunpack
+
+### TASK-0410 - Wire Unpack tab to real unpack/analyze workflow
+Status: REVIEW
+
+Scope:
+- Connect `gui/unpack_tab.py` to `core.workflow.run_unpack_and_analyze_workflow()`.
+- Keep GUI subprocess-free; commands still run through runner/WslRunner interface.
+- Update UI tables and `project_state.json` after workflow completes.
+
+Acceptance:
+- Unpack tab has `Run unpack & analyze`.
+- Missing project logs a clear project message and does not crash.
+- Successful run refreshes detected images, dynamic partitions and AVB summary.
+- Project state is saved after refresh.
+- Tests use fake runner and do not require WSL/tools.
+
+Implementation notes:
+- Added `run_unpack_analyze_backend()` helper for testable GUI flow.
+- MainWindow now passes `AppPaths` into `UnpackTab`.
+- Real command execution remains in backend workflow/runner only.
+
+### TASK-0411 - Add GUI progress/log/error handling for backend workflow
+Status: REVIEW
+
+Scope:
+- Add Unpack tab status handling and backend log/error display.
+- Keep error messages concise for GUI users.
+
+Acceptance:
+- Unpack tab tracks `Idle`, `Running`, `Done`, `Failed`.
+- Run/extract/refresh buttons are disabled while running.
+- LogPanel can show command started, command output line, command finished and error message.
+- Missing tool and command failure messages are shortened for GUI display.
+
+Implementation notes:
+- Added log callback plumbing from GUI helpers into workflow calls.
+- Added friendly formatting for `WslCommandError` and `WslCommandTimeout`.
+
+### TASK-0501 - Implement lpunpack dynamic partitions workflow
+Status: REVIEW
+
+Scope:
+- Add `extract_dynamic_partitions()` in `core/super_image.py`.
+- Detect sparse/raw super image and build `simg2img` plus `lpunpack` commands through runner.
+
+Acceptance:
+- Sparse `super.img` runs `simg2img` before `lpunpack`.
+- Raw `super.img` skips `simg2img`.
+- `parts_dir` is created and `*.img` outputs are scanned after lpunpack.
+- Missing `super.img`, `simg2img` or `lpunpack` raises clear errors.
+- Expected partition warnings list missing partition image names.
+- `tests/test_super_image_lpunpack.py` pass.
+
+Implementation notes:
+- Added `LpunpackResult`.
+- Tests use fake runner and fake `parts/*.img` output only.
+
+### TASK-0502 - Wire super.img Unpack button to lpunpack workflow
+Status: REVIEW
+
+Scope:
+- Add `Extract partitions` button in Unpack tab.
+- Call `extract_dynamic_partitions()` from a GUI helper.
+- Refresh Partition Explorer and table state afterward.
+
+Acceptance:
+- Missing project or missing `super.img` logs a clear error and does not crash.
+- Expected partitions are loaded from `lpdump_original.txt` when available.
+- Successful extract updates UI and saves project state.
+- Action remains limited to dynamic partition images; no editable filesystem extract yet.
+
+Implementation notes:
+- Added `extract_super_partitions_backend()` helper for testable GUI flow.
+- Other image actions remain not implemented.
+
+### TASK-0503 - Update project state after lpunpack
+Status: REVIEW
+
+Scope:
+- Extend `ProjectState` for lpunpack outputs.
+- Persist `parts_dir`, `raw_super_img_path` and `extracted_partition_images`.
+
+Acceptance:
+- Save/load preserves lpunpack state as UTF-8 JSON.
+- `get_partition_source_image()` prefers modified image, then extracted parts image, then default parts path.
+- Existing dynamic partition source paths are updated when matching parts images exist.
+- `tests/test_project_state.py` pass.
+
+Implementation notes:
+- Added `update_lpunpack_state()`.
+- Existing JSON remains loadable through default fields.
+
+## Phase 6 - Bundled tools normalization
+
+### TASK-0450 - Normalize existing tools from external source folder into APP_ROOT/tools
+Status: REVIEW
+
+Scope:
+- Add a normalize script that copies existing local tools into the app-local `tools/` layout.
+- Source tools folder is provided as a script argument.
+- Runtime code must keep using `APP_ROOT/tools` through `AppPaths.tools_dir`.
+
+Acceptance:
+- `scripts/normalize_existing_tools.sh` runs from app root.
+- The script accepts the source folder as argument, for example `bash scripts/normalize_existing_tools.sh /mnt/g/codex/tools`.
+- It creates/checks `tools/afptool-rs/afptool-rs`, `tools/lptools/simg2img`, `tools/lptools/lpdump`, `tools/lptools/lpunpack`, `tools/lptools/lpmake`, and `tools/avbtool/avbtool.py`.
+- It copies available tools without deleting the external source folder.
+- It prints `OK` or `MISSING` clearly for each tool.
+- It marks copied fake/stub lptools as `STUB/FAKE` when sourced from `fakebin`.
+
+Implementation notes:
+- Added `scripts/normalize_existing_tools.sh`.
+- `simg2img` was found from local WSL PATH at `/usr/bin/simg2img` when absent from the provided source folder.
+- No runtime code hard-codes the external source folder.
+
+### TASK-0451 - Validate bundled tool detection from standardized paths
+Status: REVIEW
+
+Scope:
+- Validate `core/tool_config.py` standard tool paths under `AppPaths.tools_dir`.
+- Add tests for the standardized bundled tools layout.
+- Ensure runtime code does not hard-code local app/source paths.
+
+Acceptance:
+- ToolConfig detects `OK` when all standard files exist.
+- ToolConfig reports `MISSING` when tools are absent.
+- Empty `tools/` folder does not crash.
+- Tests cover `afptool-rs`, `simg2img`, `lpdump`, `lpunpack`, `lpmake`, and `avbtool.py`.
+- Runtime files do not hard-code local `G:` or `/mnt/g/codex` app/source paths.
+
+Implementation notes:
+- Added `tests/test_tools_layout.py`.
+- Existing `tests/test_tool_config.py` remains compatible with the standardized paths.
+
+### TASK-0452 - Add tool check/normalize scripts and README
+Status: REVIEW
+
+Scope:
+- Add a standalone check script for current app-local tool status.
+- Document the app-local tools layout and normalize/check commands.
+
+Acceptance:
+- `scripts/check_tools.sh` prints `OK`, `MISSING`, `NOT_FILE`, or `NOT_EXECUTABLE` for each required tool.
+- `tools/README.md` documents that runtime uses only `APP_ROOT/tools`.
+- README documents the normalize and check commands.
+- README notes that fake/stub tools are not for real ROM work.
+
+Implementation notes:
+- Added `scripts/check_tools.sh`.
+- Updated `tools/README.md`.

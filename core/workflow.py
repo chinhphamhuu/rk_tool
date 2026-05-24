@@ -33,11 +33,12 @@ def generate_vbmeta_report(
     reports_dir: str | Path,
     tools: BundledToolConfig,
     runner,
+    log_callback=None,
 ) -> Path | None:
     """Generate an avbtool info report for vbmeta.img if the image exists."""
 
     commands_run: list[str] = []
-    return _generate_vbmeta_report(vbmeta_img_path, reports_dir, tools, runner, commands_run)
+    return _generate_vbmeta_report(vbmeta_img_path, reports_dir, tools, runner, commands_run, log_callback)
 
 
 def run_unpack_and_analyze_workflow(
@@ -45,6 +46,7 @@ def run_unpack_and_analyze_workflow(
     tools: BundledToolConfig,
     runner,
     state_path: str | Path | None = None,
+    log_callback=None,
 ) -> RomAnalyzeWorkflowResult:
     """Unpack ROM, generate reports, refresh Partition Explorer state, and save state."""
 
@@ -74,6 +76,7 @@ def run_unpack_and_analyze_workflow(
             tools,
             runner,
             commands_run,
+            log_callback,
         )
     else:
         warnings.append(f"vbmeta.img not found in Image folder: {vbmeta_img_path}")
@@ -88,6 +91,7 @@ def run_unpack_and_analyze_workflow(
                 reports_dir,
                 tools,
                 runner,
+                log_callback=log_callback,
             )
         except SuperImageWorkflowError as exc:
             raise WorkflowError(str(exc)) from exc
@@ -128,6 +132,7 @@ def _generate_vbmeta_report(
     tools: BundledToolConfig,
     runner,
     commands_run: list[str],
+    log_callback=None,
 ) -> Path | None:
     vbmeta_img = Path(vbmeta_img_path)
     if not vbmeta_img.is_file():
@@ -141,8 +146,7 @@ def _generate_vbmeta_report(
         f"python3 {_quote_path(avbtool.path)} info_image "
         f"--image {_quote_path(vbmeta_img)} > {_quote_path(report_path)}"
     )
-    commands_run.append(command)
-    runner.run(command)
+    _run_command(runner, command, commands_run, log_callback=log_callback)
     return report_path
 
 
@@ -161,3 +165,27 @@ def _quote_path(path: str | Path) -> str:
         return shell_quote(windows_path_to_wsl(path))
     except PathConversionError as exc:
         raise WorkflowError(f"Could not convert path for WSL command: {path}") from exc
+
+
+def _run_command(runner, command: str, commands_run: list[str], log_callback=None) -> None:
+    commands_run.append(command)
+    if log_callback is not None:
+        log_callback(f"command started: {command}", "info")
+
+    def _on_output(line) -> None:
+        if log_callback is not None:
+            text = getattr(line, "text", str(line))
+            if text:
+                log_callback(text, "info")
+
+    try:
+        runner.run(command, on_output=_on_output if log_callback is not None else None)
+    except TypeError:
+        runner.run(command)
+    except Exception as exc:
+        if log_callback is not None:
+            log_callback(f"command failed: {exc}", "error")
+        raise
+
+    if log_callback is not None:
+        log_callback(f"command finished: {command}", "ok")

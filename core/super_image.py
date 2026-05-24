@@ -26,12 +26,24 @@ class SuperAnalyzeResult:
     warnings: tuple[str, ...] = ()
 
 
+@dataclass(frozen=True)
+class LpunpackResult:
+    super_img_path: Path
+    raw_super_img_path: Path
+    parts_dir: Path
+    is_sparse: bool
+    extracted_images: tuple[Path, ...]
+    commands_run: tuple[str, ...]
+    warnings: tuple[str, ...] = ()
+
+
 def analyze_super_image(
     super_img_path: str | Path,
     project_work_dir: str | Path,
     reports_dir: str | Path,
     tools: BundledToolConfig,
     runner,
+    log_callback=None,
 ) -> SuperAnalyzeResult:
     """Analyze super.img and write an lpdump text report via the provided runner."""
 
@@ -60,10 +72,10 @@ def analyze_super_image(
         simg2img = _require_tool(tools, "simg2img")
         raw_super_img_path = super_work_dir / "super.raw.img"
         command = f"{_quote_path(simg2img.path)} {_quote_path(super_img)} {_quote_path(raw_super_img_path)}"
-        _run_command(runner, command, commands_run)
+        _run_command(runner, command, commands_run, log_callback=log_callback)
 
     command = f"{_quote_path(lpdump.path)} {_quote_path(raw_super_img_path)} > {_quote_path(lpdump_report_path)}"
-    _run_command(runner, command, commands_run)
+    _run_command(runner, command, commands_run, log_callback=log_callback)
 
     metadata_summary: SuperMetadata | None = None
     if lpdump_report_path.exists():
@@ -85,6 +97,64 @@ def analyze_super_image(
     )
 
 
+def extract_dynamic_partitions(
+    super_img_path: str | Path,
+    project_work_dir: str | Path,
+    parts_dir: str | Path,
+    tools: BundledToolConfig,
+    runner,
+    expected_partitions: list[str] | tuple[str, ...] | None = None,
+    log_callback=None,
+) -> LpunpackResult:
+    """Extract dynamic partition images from super.img through lpunpack."""
+
+    super_img = Path(super_img_path)
+    work_dir = Path(project_work_dir)
+    output_dir = Path(parts_dir)
+    if not super_img.is_file():
+        raise SuperImageWorkflowError(f"super.img does not exist: {super_img}")
+
+    lpunpack = _require_tool(tools, "lpunpack")
+    try:
+        is_sparse = is_android_sparse_image(super_img)
+    except SparseImageError as exc:
+        raise SuperImageWorkflowError(f"Could not inspect super.img format: {super_img}") from exc
+
+    super_work_dir = work_dir / "super"
+    super_work_dir.mkdir(parents=True, exist_ok=True)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    commands_run: list[str] = []
+    warnings: list[str] = []
+    raw_super_img_path = super_img
+
+    if is_sparse:
+        simg2img = _require_tool(tools, "simg2img")
+        raw_super_img_path = super_work_dir / "super.raw.img"
+        command = f"{_quote_path(simg2img.path)} {_quote_path(super_img)} {_quote_path(raw_super_img_path)}"
+        _run_command(runner, command, commands_run, log_callback=log_callback)
+
+    command = f"{_quote_path(lpunpack.path)} {_quote_path(raw_super_img_path)} {_quote_path(output_dir)}"
+    _run_command(runner, command, commands_run, log_callback=log_callback)
+
+    extracted_images = tuple(sorted(path for path in output_dir.glob("*.img") if path.is_file()))
+    if expected_partitions:
+        extracted_names = {path.stem for path in extracted_images}
+        missing = [partition for partition in expected_partitions if partition not in extracted_names]
+        if missing:
+            warnings.append("Missing expected partition images: " + ", ".join(missing))
+
+    return LpunpackResult(
+        super_img_path=super_img,
+        raw_super_img_path=raw_super_img_path,
+        parts_dir=output_dir,
+        is_sparse=is_sparse,
+        extracted_images=extracted_images,
+        commands_run=tuple(commands_run),
+        warnings=tuple(warnings),
+    )
+
+
 def _require_tool(tools: BundledToolConfig, name: str) -> BundledToolStatus:
     try:
         tool = tools.by_name(name)
@@ -102,6 +172,25 @@ def _quote_path(path: str | Path) -> str:
         raise SuperImageWorkflowError(f"Could not convert path for WSL command: {path}") from exc
 
 
-def _run_command(runner, command: str, commands_run: list[str]) -> None:
+def _run_command(runner, command: str, commands_run: list[str], log_callback=None) -> None:
     commands_run.append(command)
-    runner.run(command)
+    if log_callback is not None:
+        log_callback(f"command started: {command}", "info")
+
+    def _on_output(line) -> None:
+        if log_callback is not None:
+            text = getattr(line, "text", str(line))
+            if text:
+                log_callback(text, "info")
+
+    try:
+        runner.run(command, on_output=_on_output if log_callback is not None else None)
+    except TypeError:
+        runner.run(command)
+    except Exception as exc:
+        if log_callback is not None:
+            log_callback(f"command failed: {exc}", "error")
+        raise
+
+    if log_callback is not None:
+        log_callback(f"command finished: {command}", "ok")

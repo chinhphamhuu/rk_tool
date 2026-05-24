@@ -310,3 +310,25 @@
 - Tool that co the missing; workflow raise loi ro ten tool va path missing, khong chay tiep command sai.
 - Backend hien da co foundation cho unpack/analyze that qua `WslRunner` interface.
 - Van chua noi GUI button that, chua `lpunpack` dynamic partitions, chua extract editable folder, chua apply diff/debugfs, chua rebuild super, chua repack final.
+
+## GUI unpack/analyze and lpunpack wiring
+
+- `TASK-0410`, `TASK-0411`, `TASK-0501`, `TASK-0502`, `TASK-0503` da implement xong va chuyen sang REVIEW.
+- GUI Unpack tab da co nut `Run unpack & analyze` de goi backend workflow foundation qua runner interface.
+- GUI Unpack tab da co status/log/error handling co ban: `Idle`, `Running`, `Done`, `Failed`.
+- GUI Unpack tab da co nut `Extract partitions` de goi lpunpack workflow tao `work/parts/*.img`.
+- `core/super_image.py` da co `extract_dynamic_partitions()` cho sparse/raw super image, `simg2img` khi can va `lpunpack`.
+- `core/project_state.py` da luu `parts_dir`, `raw_super_img_path` va `extracted_partition_images`.
+- Van chua extract filesystem ra editable folder, chua apply diff/debugfs, chua resize, chua rebuild super, chua repack final va chua flash.
+
+## Bundled tools normalization
+
+- `TASK-0450`, `TASK-0451`, `TASK-0452` da implement xong va chuyen sang REVIEW.
+- App folder hien tai la `G:\codex\rockchip_tool_updated_structure`.
+- Source tool folder nguoi dung co san la `G:\codex\tools`.
+- Runtime app chi dung `APP_ROOT/tools` thong qua `core/app_paths.py` va `core/tool_config.py`.
+- Runtime code khong hard-code o `G:` hoac `/mnt/g/codex`.
+- `scripts/normalize_existing_tools.sh` nhan source tools path bang argument, vi du `bash scripts/normalize_existing_tools.sh /mnt/g/codex/tools`.
+- `simg2img` duoc lay tu local WSL PATH `/usr/bin/simg2img` vi source tools folder khong co file nay.
+- `scripts/check_tools.sh` kiem tra layout chuan trong app-local `tools/`.
+- `tools/README.md` ghi ro fakebin/stub chi dung cho detect/test, khong dung ROM that.

@@ -13,6 +13,7 @@ from core.project_state import (
     mark_partition_extracted,
     mark_partition_modified,
     save_project_state,
+    update_lpunpack_state,
     update_partition_explorer_state,
 )
 
@@ -123,11 +124,32 @@ def test_mark_partition_modified(tmp_path):
 def test_get_partition_source_image_prefers_modified_when_marked(tmp_path):
     state = _make_state(tmp_path)
 
-    assert get_partition_source_image(state, "product_a") == Path(state.project_dir) / "parts" / "product_a.img"
+    assert get_partition_source_image(state, "product_a") == Path(state.work_dir) / "parts" / "product_a.img"
 
     mark_partition_modified(state, "product_a")
 
-    assert get_partition_source_image(state, "product_a") == Path(state.project_dir) / "modified" / "product_a.img"
+    assert get_partition_source_image(state, "product_a") == Path(state.work_dir) / "modified" / "product_a.img"
+
+
+def test_lpunpack_state_save_load_and_source_mapping(tmp_path):
+    state = _make_state(tmp_path)
+    parts_dir = Path(state.work_dir) / "parts"
+    raw_super = Path(state.work_dir) / "super" / "super.raw.img"
+    product_img = parts_dir / "product_a.img"
+    system_img = parts_dir / "system_a.img"
+
+    update_lpunpack_state(state, parts_dir, raw_super, (product_img, system_img))
+    state_file = tmp_path / "state.json"
+    save_project_state(state, state_file)
+    loaded = load_project_state(state_file)
+
+    assert loaded.parts_dir == str(parts_dir)
+    assert loaded.raw_super_img_path == str(raw_super)
+    assert loaded.extracted_partition_images == {
+        "product_a": str(product_img),
+        "system_a": str(system_img),
+    }
+    assert get_partition_source_image(loaded, "product_a") == product_img
 
 
 def test_missing_state_file_raises_clear_error(tmp_path):

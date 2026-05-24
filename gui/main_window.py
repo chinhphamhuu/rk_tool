@@ -48,7 +48,7 @@ class MainWindow(QMainWindow):
         self.stack.setObjectName("ContentRoot")
 
         self.project_tab = ProjectTab(paths)
-        self.unpack_tab = UnpackTab()
+        self.unpack_tab = UnpackTab(paths)
         self.project_tab.project_created.connect(self._set_project_state)
         self.project_tab.project_loaded.connect(self._set_project_state)
         self.unpack_tab.project_state_updated.connect(self._set_project_state)

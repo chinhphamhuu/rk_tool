@@ -4,8 +4,15 @@
 
 ### Changed
 
+- Added `scripts/normalize_existing_tools.sh` to copy existing local tools into `APP_ROOT/tools`.
+- Updated normalize script to use local WSL `PATH` as a fallback for missing lptools such as `simg2img`.
+- Added `scripts/check_tools.sh` to report bundled tool `OK`/`MISSING`/`NOT_EXECUTABLE` status.
+- Updated `tools/README.md` with normalize/check commands and the standard app-local tool layout.
+- Added `tests/test_tools_layout.py` to validate standardized tool paths and guard runtime code against local hard-coded paths.
+- `TASK-0450`, `TASK-0451`, `TASK-0452` implement xong va chuyen sang REVIEW.
 - `TASK-0401`, `TASK-0402`, `TASK-0403` implement xong va chuyen sang REVIEW; backend unpack/analyze workflow foundation build command qua runner interface, tests dung fake runner va chua repack/apply/flash.
 - `TASK-0401`, `TASK-0402`, `TASK-0403` review PASS va chuyen sang DONE.
+- `TASK-0410`, `TASK-0411`, `TASK-0501`, `TASK-0502`, `TASK-0503` implement xong va chuyen sang REVIEW; GUI Unpack da noi backend unpack/analyze va lpunpack workflow qua runner interface.
 
 - UX bỏ tab Setup.
 - UX bỏ tab Verify riêng.
@@ -42,6 +49,11 @@
 - `core/workflow.py` combined workflow tao `vbmeta_info.txt`, `lpdump_original.txt`, refresh Partition Explorer va update project state.
 - `tools/lptools/simg2img` detection trong `core/tool_config.py`; `afptool-rs` path chuan la `tools/afptool-rs/afptool-rs`.
 - `tests/test_rkaf.py`, `tests/test_super_image.py`, `tests/test_workflow_unpack_analyze.py`.
+- GUI unpack/analyze workflow wiring trong `gui/unpack_tab.py`.
+- Log/status/error handling co ban cho Unpack tab.
+- `extract_dynamic_partitions()` lpunpack workflow trong `core/super_image.py`.
+- Project state fields cho `parts_dir`, `raw_super_img_path`, `extracted_partition_images`.
+- `tests/test_super_image_lpunpack.py` va `tests/test_gui_unpack_backend_flow.py`.
 
 - `docs/TECHNICAL_KNOWLEDGE_BASE.md`.
 - `docs/COMMANDS_REFERENCE.md`.

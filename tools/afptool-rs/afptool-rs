@@ -1,0 +1,203 @@
+#!/usr/bin/env python3
+import argparse
+import datetime as _dt
+import hashlib
+import os
+import subprocess
+import sys
+
+
+RKFW_SIGNATURE = b"RKFW"
+RKAF_SIGNATURE = b"RKAF"
+HEADER_SIZE = 0x66
+
+CHIP_CODES = {
+    "RV1109": 0x19,
+    "RV1126": 0x19,
+    "PX30": 0x30,
+    "RK3562": 0x32,
+    "RK3399": 0x33,
+    "RK3399PRO": 0x33,
+    "RK3588": 0x35,
+    "RK3588S": 0x35,
+    "RK3326": 0x36,
+    "RK3566": 0x38,
+    "RK3568": 0x38,
+    "RK3528": 0x39,
+    "RK3229": 0x41,
+    "RK3368": 0x41,
+    "RK3308": 0x48,
+    "RK29XX": 0x50,
+    "RK29": 0x50,
+    "RK2918": 0x50,
+    "RK2908": 0x50,
+    "RV1108": 0x51,
+    "RK30XX": 0x60,
+    "RK30": 0x60,
+    "RK3066": 0x60,
+    "RK3026": 0x60,
+    "RK31XX": 0x70,
+    "RK31": 0x70,
+    "RK3188": 0x70,
+    "PX1": 0x70,
+    "PX3": 0x70,
+    "PX4": 0x70,
+    "RK32XX": 0x80,
+    "RK32": 0x80,
+    "RK3288": 0x80,
+}
+
+
+def original_tool_path() -> str:
+    tool_dir = os.path.dirname(os.path.abspath(__file__))
+    orig_path = os.path.join(tool_dir, "afptool-rs-linux-x86_64.orig")
+    if os.path.exists(orig_path):
+        return orig_path
+    return os.path.join(tool_dir, "afptool-rs-linux-x86_64")
+
+
+def delegate_to_original(argv: list[str]) -> int:
+    return subprocess.call([original_tool_path(), *argv])
+
+
+def parse_code(value: str) -> int:
+    raw = value[2:] if value.lower().startswith("0x") else value
+    try:
+        code = int(raw, 16)
+    except ValueError as exc:
+        raise SystemExit(f"Invalid hex value for --code: {value}") from exc
+    if code < 0 or code > 0xFFFFFFFF:
+        raise SystemExit(f"--code is outside u32 range: {value}")
+    return code
+
+
+def parse_version(value: str) -> tuple[int, int, int]:
+    parts = value.split(".")
+    if len(parts) != 3:
+        raise SystemExit("Version must be in format major.minor.build, e.g. 12.0.0")
+    try:
+        major, minor, build = (int(part) for part in parts)
+    except ValueError as exc:
+        raise SystemExit(f"Invalid version: {value}") from exc
+    if not (0 <= major <= 0xFF and 0 <= minor <= 0xFF and 0 <= build <= 0xFFFF):
+        raise SystemExit(f"Version fields out of range: {value}")
+    return major, minor, build
+
+
+def infer_chip_bytes(chip: str) -> bytes:
+    normalized = chip.upper()
+    if normalized not in CHIP_CODES:
+        raise SystemExit(f"Unsupported chip family: {chip}")
+
+    out = bytearray(4)
+    out[0] = CHIP_CODES[normalized]
+    digits = [ord(ch) for ch in chip if ch.isdigit()]
+    if len(digits) >= 3:
+        out[1] = digits[2]
+        out[2] = digits[1]
+        out[3] = digits[0]
+    return bytes(out)
+
+
+def parse_chip_bytes(value: str) -> bytes:
+    data = value.encode("ascii", errors="strict")
+    if len(data) != 4:
+        raise SystemExit("--chip-bytes must be exactly 4 ASCII characters, e.g. H223 or A223")
+    return data
+
+
+def put_u32_le(buf: bytearray, offset: int, value: int) -> None:
+    buf[offset : offset + 4] = value.to_bytes(4, "little")
+
+
+def pack_rkfw(args: argparse.Namespace) -> int:
+    if not args.chip and not args.chip_bytes:
+        raise SystemExit("Either --chip or --chip-bytes must be supplied for pack-rkfw")
+
+    input_dir = os.path.abspath(args.input)
+    boot_path = os.path.join(input_dir, "BOOT")
+    update_path = os.path.join(input_dir, "embedded-update.img")
+
+    with open(boot_path, "rb") as fp:
+        boot_data = fp.read()
+    with open(update_path, "rb") as fp:
+        update_data = fp.read()
+
+    if not update_data.startswith(RKAF_SIGNATURE):
+        raise SystemExit("embedded-update.img must be a valid RKAF file")
+
+    major, minor, build = parse_version(args.version)
+    code = parse_code(args.code)
+    chip_header = parse_chip_bytes(args.chip_bytes) if args.chip_bytes else infer_chip_bytes(args.chip)
+
+    dt = _dt.datetime.utcfromtimestamp(args.timestamp)
+    header = bytearray(HEADER_SIZE)
+    header[0:4] = RKFW_SIGNATURE
+    header[0x04] = HEADER_SIZE
+    header[0x06] = build & 0xFF
+    header[0x07] = (build >> 8) & 0xFF
+    header[0x08] = minor
+    header[0x09] = major
+    put_u32_le(header, 0x0A, code)
+    header[0x0E] = dt.year & 0xFF
+    header[0x0F] = (dt.year >> 8) & 0xFF
+    header[0x10] = dt.month
+    header[0x11] = dt.day
+    header[0x12] = dt.hour
+    header[0x13] = dt.minute
+    header[0x14] = dt.second
+    header[0x15:0x19] = chip_header
+
+    boot_offset = HEADER_SIZE
+    update_offset = boot_offset + len(boot_data)
+    put_u32_le(header, 0x19, boot_offset)
+    put_u32_le(header, 0x1D, len(boot_data))
+    put_u32_le(header, 0x21, update_offset)
+    put_u32_le(header, 0x25, len(update_data))
+    header[0x2D] = 0x01
+
+    file_data = bytes(header) + boot_data + update_data
+    md5_hex = hashlib.md5(file_data).hexdigest().encode("ascii")
+
+    output = os.path.abspath(args.output)
+    os.makedirs(os.path.dirname(output) or ".", exist_ok=True)
+    with open(output, "wb") as fp:
+        fp.write(file_data)
+        fp.write(md5_hex)
+
+    print("Successfully packed RKFW image:")
+    print(f"  Output: {output}")
+    print(f"  Version: {major}.{minor}.{build}")
+    print(f"  Date: {dt.year:04d}-{dt.month:02d}-{dt.day:02d} {dt.hour:02d}:{dt.minute:02d}:{dt.second:02d}")
+    print(f"  Chip: {args.chip if args.chip else '<not specified>'}")
+    print(f"  RKFW chip bytes: {chip_header.decode('ascii')}")
+    print(f"  BOOT size: {len(boot_data)} bytes")
+    print(f"  Update image size: {len(update_data)} bytes")
+    print(f"  MD5: {md5_hex.decode('ascii')}")
+    print(f"  Total size: {len(file_data) + len(md5_hex)} bytes")
+    return 0
+
+
+def main(argv: list[str]) -> int:
+    if len(argv) < 2:
+        return delegate_to_original(argv[1:])
+
+    command = argv[1]
+    if command in {"unpack", "pack-rkaf", "help", "-h", "--help", "-V", "--version"}:
+        return delegate_to_original(argv[1:])
+    if command != "pack-rkfw":
+        return delegate_to_original(argv[1:])
+
+    parser = argparse.ArgumentParser(prog="afptool-rs pack-rkfw")
+    parser.add_argument("input")
+    parser.add_argument("output")
+    parser.add_argument("-c", "--chip")
+    parser.add_argument("--chip-bytes")
+    parser.add_argument("-v", "--version", required=True)
+    parser.add_argument("-t", "--timestamp", type=int, required=True)
+    parser.add_argument("--code", required=True)
+    return pack_rkfw(parser.parse_args(argv[2:]))
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv))
