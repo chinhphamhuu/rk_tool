@@ -12,9 +12,37 @@
 - Tab Unpack chuyển thành Partition Explorer.
 - Tab Repack đổi thành `Repack & Verify`, tự verify offline sau khi repack.
 
-Docs alignment đang ở REVIEW cho `TASK-0001`. `TASK-0101` đã implement `core/app_paths.py` và đang ở REVIEW. `TASK-0101B` đã review PASS và DONE. `TASK-0102` đã review PASS và DONE. `TASK-0200` đã review PASS và DONE.
+`TASK-0001` đã review PASS và DONE. `TASK-0101` đã review PASS và DONE. `TASK-0101B` đã review PASS và DONE. `TASK-0102` đã review PASS và DONE. `TASK-0103` đã review PASS và DONE. `TASK-0104 — Implement core/rkfw.py RKFW header and MD5 tail utilities` đã implement xong và đang ở REVIEW. `TASK-0200` đã review PASS và DONE.
 
 ## Review mới nhất
+
+`TASK-0001 — Update repo structure after UX change`:
+
+- PASS: Docs phản ánh đúng 7 tab và đúng UX đã khóa.
+- PASS: Không có Setup tab và không có Verify tab riêng trong spec/flow.
+- PASS: Có Partition Explorer flow và runbook unpack selected image.
+- PASS: Repack & Verify gộp verify offline, không claim ROM chắc chắn boot.
+- PASS: Workspace tự động, bundled tools, editable staging, Apply diff/debugfs, Rebuild Super từ `lpdump` và Repack & Verify đã có trong docs.
+- PASS: MVP không flash thiết bị.
+
+`TASK-0103 — Implement core/path_utils.py`:
+
+- PASS: Path conversion portable, không hard-code C:/D:, username, workspace hoặc tên máy.
+- PASS: Hỗ trợ mọi drive letter Windows qua `/mnt/<drive>/...`; test có C, D và E.
+- PASS: Không làm mất Unicode tiếng Việt và convert đúng path có dấu cách.
+- PASS: `shell_quote()` quote an toàn bằng POSIX shell quoting.
+- PASS: WSL UNC path được detect/convert; UNC network path raise lỗi MVP rõ ràng.
+- PASS: Relative/invalid path raise `PathConversionError`.
+- PASS: Không gọi WSL, subprocess, GUI hoặc ROM tool thật.
+- PASS: Tests pass: `tests/test_path_utils.py`, `compileall`, smoke test và full pytest.
+
+`TASK-0101 — Implement core/app_paths.py`:
+
+- PASS: Detect `APP_ROOT` cho Python mode và frozen EXE mode.
+- PASS: Workspace tự động nằm trong `APP_ROOT/workspace`.
+- PASS: Tạo đủ `workspace/projects`, `workspace/output`, `workspace/logs`, `workspace/temp`.
+- PASS: Không gọi WSL/subprocess và không cho người dùng chọn workspace thủ công.
+- PASS: Tests pass: `tests/test_app_paths.py`.
 
 `TASK-0102 — Implement core/wsl_runner.py`:
 
@@ -45,6 +73,35 @@ Docs alignment đang ở REVIEW cho `TASK-0001`. `TASK-0101` đã implement `cor
 - Tests pass: `compileall`, smoke test, pytest và GUI instantiate offscreen.
 
 ## Implementation mới nhất
+
+`TASK-0104 — Implement core/rkfw.py RKFW header and MD5 tail utilities`:
+
+- `read_rkfw_header()` đọc 4 byte header tại offset `0x15`.
+- `copy_rkfw_header()` copy header từ ROM gốc sang image repacked/target.
+- `read_md5_tail()`, `compute_body_md5()`, `verify_md5_tail()` và `rewrite_md5_tail()` xử lý MD5 tail 32 byte ASCII cuối file.
+- `fix_header_and_md5_tail()` copy repacked sang output, restore header gốc, tính lại MD5 tail và trả `RkfwFixResult`.
+- MD5 body đọc theo chunk, không load toàn bộ file vào RAM.
+- File quá nhỏ raise `RkfwImageError` rõ ràng.
+- Không gọi WSL, subprocess, `afptool-rs`, ROM tool thật hoặc GUI.
+- Tests pass: `tests/test_rkfw_md5.py`, `compileall`, smoke test và full pytest.
+
+`TASK-0103 — Implement core/path_utils.py`:
+
+- `WindowsPathToWsl` convert path Windows dạng drive-letter sang WSL path dưới `/mnt/<drive>/`.
+- Hỗ trợ path ổ C/D, path có dấu cách và Unicode tiếng Việt mà không normalize mất ký tự.
+- Hỗ trợ WSL UNC path dạng `\\wsl$\Ubuntu-24.04\home\user\project` sang `/home/user/project`.
+- UNC network path như `\\NAS\share\file.img` hoặc `\\192.168.1.10\share\file.img` raise lỗi rõ: chưa hỗ trợ trong MVP, hãy copy file vào workspace local.
+- `shell_quote()` dùng POSIX shell quoting an toàn.
+- Invalid path raise `PathConversionError` rõ ràng.
+- Không gọi WSL, subprocess hoặc ROM tool thật.
+- Tests pass: `tests/test_path_utils.py`, `compileall`, smoke test và full pytest.
+
+`TASK-0101 — Implement core/app_paths.py`:
+
+- `AppPaths.detect()` xác định `APP_ROOT`, `tools_dir`, `workspace_dir` và các thư mục con workspace.
+- `_detect_app_root()` hỗ trợ Python mode và frozen EXE mode.
+- `ensure_workspace()` tạo workspace tự động.
+- Không gọi WSL/subprocess.
 
 `TASK-0102 — Implement core/wsl_runner.py`:
 
@@ -88,6 +145,6 @@ Docs alignment đang ở REVIEW cho `TASK-0001`. `TASK-0101` đã implement `cor
 
 ## Task tiếp theo đề xuất
 
-1. Review `TASK-0001` docs alignment.
-2. Review `TASK-0101` — `core/app_paths.py`.
-3. Implement backend wiring cho Project/Unpack sau khi core foundation review xong.
+1. Review `TASK-0104 — core/rkfw.py`.
+2. Nếu review PASS, chuyển `TASK-0104` sang DONE.
+3. Implement backend wiring cho Project/Unpack sau khi core foundation tiếp tục ổn định.

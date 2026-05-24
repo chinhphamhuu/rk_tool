@@ -3,7 +3,7 @@
 ## Phase 0 — Docs & structure
 
 ### TASK-0001 — Update repo structure after UX change
-Status: REVIEW
+Status: DONE
 Owner: Implementer / Reviewer
 
 Scope:
@@ -22,15 +22,32 @@ Acceptance:
 - Docs nêu rõ `lpmake` phải parse từ `lpdump` gốc, không hard-code.
 - Docs nêu đúng câu kết quả verify offline được phép báo.
 
+Reviewer notes:
+- PASS: Docs phản ánh đúng 7 tab: Project, Unpack, Analyze, Edit ROM Folder, Apply Changes, Rebuild Super, Repack & Verify.
+- PASS: Docs nêu rõ không có Setup tab và không có Verify tab riêng.
+- PASS: Có `PARTITION_EXPLORER_FLOW.md` và runbook `03_UNPACK_SELECTED_IMAGE.md`.
+- PASS: Repack & Verify gộp verify offline, chỉ báo `Verify offline PASS` và không claim ROM chắc chắn boot.
+- PASS: Workspace tự động và bundled tools read-only được mô tả trong spec/runbooks.
+- PASS: Docs có editable staging, Apply diff bằng `debugfs`, Rebuild Super từ `lpdump` và Repack & Verify.
+- PASS: MVP không flash thiết bị.
+
 ## Phase 1 — Core foundation
 
 ### TASK-0101 — Implement `core/app_paths.py`
-Status: REVIEW
+Status: DONE
 
 Acceptance:
 - Detect `APP_ROOT` khi chạy Python hoặc EXE.
 - Tạo `workspace/projects`, `workspace/output`, `workspace/logs`, `workspace/temp`.
 - Test `test_app_paths.py` pass.
+
+Reviewer notes:
+- PASS: `core/app_paths.py` detect `APP_ROOT` khi chạy Python từ thư mục chứa `app.py`.
+- PASS: Detect `APP_ROOT` khi frozen EXE bằng thư mục chứa `sys.executable`.
+- PASS: Workspace tự động nằm trong `APP_ROOT/workspace`.
+- PASS: `ensure_workspace()` tạo đủ `workspace/projects`, `workspace/output`, `workspace/logs`, `workspace/temp`.
+- PASS: Không gọi WSL/subprocess và không có cơ chế cho người dùng chọn workspace thủ công.
+- PASS: `tests/test_app_paths.py` pass.
 
 ### TASK-0101B — Implement bundled tool detection
 Status: DONE
@@ -91,6 +108,74 @@ Reviewer notes:
 - PASS: Non-zero exit code raise `WslCommandError` khi `check=True`; `check=False` trả result.
 - PASS: Timeout raise `WslCommandTimeout` và kill process.
 - PASS: Tests dùng mock subprocess, không phụ thuộc WSL thật; cover builder, success, failure, `check=False`, stdout/stderr capture và timeout.
+
+### TASK-0103 — Implement `core/path_utils.py`
+Status: DONE
+
+Scope:
+- Chuyển Windows path sang WSL path.
+- Quote shell path an toàn.
+- Không gọi WSL.
+- Không gọi subprocess.
+- Không gọi ROM tool thật.
+
+Acceptance:
+- Convert `C:\Users\Test\rom.img` -> `/mnt/c/Users/Test/rom.img`.
+- Convert `D:\ROM_BOX\update.img` -> `/mnt/d/ROM_BOX/update.img`.
+- Hỗ trợ path có dấu cách.
+- Hỗ trợ Unicode tiếng Việt.
+- Có `shell_quote()`.
+- Có error rõ ràng nếu path không hợp lệ.
+- `tests/test_path_utils.py` pass.
+- `python -m compileall .` pass.
+- `python app.py --smoke-test` pass.
+- `python -m pytest` pass.
+
+Implementation notes:
+- Added `WindowsPathToWsl`, `windows_path_to_wsl()`, `shell_quote()` and `PathConversionError`.
+- Supports drive-letter paths, paths with spaces, Unicode paths and WSL UNC paths like `\\wsl$\Ubuntu-24.04\home\user\project`.
+- Does not call WSL, subprocess or ROM tools.
+- Tests pass: `tests/test_path_utils.py`, `compileall`, smoke test and full pytest.
+
+Reviewer notes:
+- PASS: Conversion is portable across Windows drive letters and does not hard-code C:, D:, username, workspace or machine name.
+- PASS: Converts C/D/E drive examples to `/mnt/<drive>/...`, including paths with spaces and Unicode tiếng Việt.
+- PASS: `shell_quote()` uses POSIX shell quoting and safely quotes `/mnt/d/ROM Box/update.img`.
+- PASS: WSL UNC paths are detected and converted to Linux paths; UNC network paths raise a clear MVP error asking the user to copy into local workspace.
+- PASS: Relative/invalid paths raise `PathConversionError` instead of returning ambiguous output.
+- PASS: No WSL, subprocess, GUI or ROM tool calls were added.
+- PASS: Tests pass: `tests/test_path_utils.py`, `compileall`, smoke test and full pytest.
+
+### TASK-0104 — Implement `core/rkfw.py` RKFW header and MD5 tail utilities
+Status: REVIEW
+
+Scope:
+- Implement RKFW header and MD5 tail helpers in `core/rkfw.py`.
+- Use Python binary file I/O only.
+- Do not call WSL, subprocess, `afptool-rs` or any ROM tool.
+- Do not unpack/repack a real ROM and do not modify GUI.
+
+Acceptance:
+- `read_rkfw_header(path) -> bytes` reads 4 bytes at offset `0x15`.
+- `copy_rkfw_header(original_path, target_path)` copies the original RKFW chip header into target.
+- `read_md5_tail(path) -> str` reads the 32 byte ASCII MD5 tail.
+- `compute_body_md5(path) -> str` hashes the file body excluding the final 32 bytes using chunks.
+- `verify_md5_tail(path) -> bool` compares body MD5 with the tail.
+- `rewrite_md5_tail(path) -> str` rewrites the final 32 byte ASCII MD5 tail.
+- `fix_header_and_md5_tail(original_path, repacked_path, output_path)` copies repacked to output, restores header, recalculates MD5 tail and returns result info.
+- Small files raise `RkfwImageError` with clear messages.
+- `tests/test_rkfw_md5.py` pass.
+- `python -m compileall .` pass.
+- `python app.py --smoke-test` pass.
+- `python -m pytest` pass.
+
+Implementation notes:
+- Added constants for header offset/size and MD5 tail size.
+- Added `RkfwImageError` and `RkfwFixResult`.
+- MD5 calculation reads in chunks and does not load the full image into RAM.
+- Tests cover header read/copy, tail read, body MD5, verify true/false, rewrite tail, fix header+tail and too-small file errors.
+- No WSL, subprocess, GUI or ROM tool calls were added.
+- Tests pass: `tests/test_rkfw_md5.py`, `compileall`, smoke test and full pytest.
 
 ## Phase 2 — Project & Unpack GUI
 
